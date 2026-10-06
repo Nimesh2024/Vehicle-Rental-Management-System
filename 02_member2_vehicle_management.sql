@@ -11,7 +11,7 @@ CREATE INDEX idx_veh_status ON Vehicles(Status);
 
 -- 2. VIEWS
 CREATE OR REPLACE VIEW AvailableVehiclesView AS
-SELECT v.VehicleID, v.RegistrationNumber, v.Make, v.Model, c.CategoryName, c.DailyRate
+SELECT v.VehicleID, v.RegistrationNumber, v.Make, v.Model, c.CategoryName, c.DailyRate, v.Status
 FROM Vehicles v
 JOIN VehicleCategories c ON v.CategoryID = c.CategoryID
 WHERE v.Status = 'Available';

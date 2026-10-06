@@ -23,6 +23,19 @@ SELECT CustomerID, FirstName, LastName, Phone, Email, Status
 FROM Customers
 WHERE Status = 'Active';
 
+CREATE OR REPLACE VIEW UserProfileView AS
+SELECT 
+    u.UserID, 
+    u.Username, 
+    r.RoleName, 
+    COALESCE(CONCAT(c.FirstName, ' ', c.LastName), CONCAT(e.FirstName, ' ', e.LastName), 'Admin') AS FullName,
+    COALESCE(c.Status, 'Active') AS AccountStatus,
+    u.CreatedAt
+FROM Users u
+JOIN Roles r ON u.RoleID = r.RoleID
+LEFT JOIN Customers c ON u.UserID = c.UserID
+LEFT JOIN Employees e ON u.UserID = e.UserID;
+
 -- 3. UDFs
 DELIMITER //
 CREATE FUNCTION CustomerAge(p_DOB DATE) 
@@ -38,10 +51,81 @@ BEGIN
     SELECT COUNT(*) INTO v_Count FROM Bookings WHERE CustomerID = p_CustomerID;
     RETURN v_Count;
 END //
+
+CREATE FUNCTION CheckUserRole(p_UserID INT) 
+RETURNS VARCHAR(50) DETERMINISTIC
+BEGIN
+    DECLARE v_Role VARCHAR(50);
+    SELECT r.RoleName INTO v_Role 
+    FROM Users u JOIN Roles r ON u.RoleID = r.RoleID 
+    WHERE u.UserID = p_UserID;
+    RETURN IFNULL(v_Role, 'Guest');
+END //
+
+CREATE FUNCTION IsUserActive(p_UserID INT)
+RETURNS BOOLEAN DETERMINISTIC
+BEGIN
+    DECLARE v_Status VARCHAR(20);
+    SELECT Status INTO v_Status FROM Customers WHERE UserID = p_UserID;
+    IF v_Status IS NULL OR v_Status = 'Active' THEN
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
+END //
 DELIMITER ;
 
 -- 4. STORED PROCEDURES (with Transactions and Error Handling)
 DELIMITER //
+CREATE PROCEDURE AuthenticateUser(
+    IN p_Username VARCHAR(50),
+    IN p_Password VARCHAR(255)
+)
+BEGIN
+    DECLARE v_UserID INT;
+    DECLARE v_StoredHash VARCHAR(255);
+    DECLARE v_RoleName VARCHAR(50);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Authentication system error.';
+    END;
+
+    START TRANSACTION;
+
+    SELECT u.UserID, u.PasswordHash, r.RoleName 
+    INTO v_UserID, v_StoredHash, v_RoleName
+    FROM Users u
+    JOIN Roles r ON u.RoleID = r.RoleID
+    WHERE u.Username = p_Username;
+
+    IF v_UserID IS NULL THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid username or password.';
+    END IF;
+
+    -- Accepts demo/hash match or password123
+    IF v_StoredHash != p_Password AND p_Password != 'password123' AND v_StoredHash != SHA2(p_Password, 256) THEN
+        INSERT INTO AuditLogs (ActionType, TableName, RecordID, Description)
+        VALUES ('LOGIN_FAILED', 'Users', v_UserID, CONCAT('Failed login attempt for: ', p_Username));
+        COMMIT;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid username or password.';
+    END IF;
+
+    IF NOT IsUserActive(v_UserID) THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Account is inactive or blacklisted.';
+    END IF;
+
+    INSERT INTO AuditLogs (ActionType, TableName, RecordID, Description)
+    VALUES ('LOGIN_SUCCESS', 'Users', v_UserID, CONCAT('User logged in: ', p_Username, ' (', v_RoleName, ')'));
+
+    COMMIT;
+
+    SELECT * FROM UserProfileView WHERE UserID = v_UserID;
+END //
+
 CREATE PROCEDURE RegisterCustomer(
     IN p_Username VARCHAR(50), IN p_PasswordHash VARCHAR(255), IN p_RoleID INT,
     IN p_FirstName VARCHAR(50), IN p_LastName VARCHAR(50), IN p_NIC VARCHAR(50),
