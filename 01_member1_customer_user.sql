@@ -28,6 +28,7 @@ SELECT
     u.UserID, 
     u.Username, 
     r.RoleName, 
+    c.CustomerID,
     COALESCE(CONCAT(c.FirstName, ' ', c.LastName), CONCAT(e.FirstName, ' ', e.LastName), 'Admin') AS FullName,
     COALESCE(c.Status, 'Active') AS AccountStatus,
     u.CreatedAt
