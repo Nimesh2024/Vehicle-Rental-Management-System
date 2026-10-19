@@ -323,6 +323,7 @@ function App() {
         <BrowseTab 
           vehicles={vehicles}
           categories={categories}
+          branches={branches}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           selectedCategory={selectedCategory}
@@ -341,123 +342,128 @@ function App() {
         />
       )}
 
-      {/* Tab: Executive KPI Dashboard (Admin Only) */}
-      {activeTab === 'dashboard' && role === 'Admin' && (
-        <DashboardTab 
-          stats={stats} 
-          allVehicles={allVehicles} 
-          onNavigate={(tab) => setActiveTab(tab)} 
-        />
-      )}
+      {/* Non-Browse Management Tabs Container */}
+      {activeTab !== 'browse' && (
+        <div className="dashboard-container">
+          {/* Tab: Executive KPI Dashboard (Admin Only) */}
+          {activeTab === 'dashboard' && role === 'Admin' && (
+            <DashboardTab 
+              stats={stats} 
+              allVehicles={allVehicles} 
+              onNavigate={(tab) => setActiveTab(tab)} 
+            />
+          )}
 
-      {/* Tab: Fleet Inventory */}
-      {activeTab === 'fleet' && (
-        <FleetTab 
-          allVehicles={allVehicles}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          role={role}
-          onAddVehicle={() => {
-            setFormData({ categoryId: 1, branchId: 1, make: '', model: '', year: 2024, registration: '', purchaseDate: '' });
-            setModalState({ type: 'add_vehicle', data: null });
-          }}
-          onUpdateStatus={(v) => {
-            setFormData({ status: v.Status });
-            setModalState({ type: 'update_vehicle_status', data: v });
-          }}
-        />
-      )}
+          {/* Tab: Fleet Inventory */}
+          {activeTab === 'fleet' && (
+            <FleetTab 
+              allVehicles={allVehicles}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              role={role}
+              onAddVehicle={() => {
+                setFormData({ categoryId: 1, branchId: 1, make: '', model: '', year: 2024, registration: '', purchaseDate: '' });
+                setModalState({ type: 'add_vehicle', data: null });
+              }}
+              onUpdateStatus={(v) => {
+                setFormData({ status: v.Status });
+                setModalState({ type: 'update_vehicle_status', data: v });
+              }}
+            />
+          )}
 
-      {/* Tab: Bookings & My Bookings */}
-      {(activeTab === 'bookings' || activeTab === 'my_bookings') && (
-        <BookingsTab 
-          isMyBookings={activeTab === 'my_bookings'}
-          bookings={activeTab === 'my_bookings' ? myBookings : bookings}
-          currentUser={currentUser}
-          role={role}
-          onStartRental={(b) => {
-            setFormData({ bookingId: b.BookingID, startMileage: 10000 });
-            setModalState({ type: 'start_rental', data: b });
-          }}
-        />
-      )}
+          {/* Tab: Bookings & My Bookings */}
+          {(activeTab === 'bookings' || activeTab === 'my_bookings') && (
+            <BookingsTab 
+              isMyBookings={activeTab === 'my_bookings'}
+              bookings={activeTab === 'my_bookings' ? myBookings : bookings}
+              currentUser={currentUser}
+              role={role}
+              onStartRental={(b) => {
+                setFormData({ bookingId: b.BookingID, startMileage: 10000 });
+                setModalState({ type: 'start_rental', data: b });
+              }}
+            />
+          )}
 
-      {/* Tab: Active Ongoing Rentals */}
-      {activeTab === 'rentals' && (
-        <RentalsTab 
-          activeRentals={activeRentals}
-          role={role}
-          onReturnVehicle={(r) => {
-            setFormData({ rentalId: r.RentalID, endMileage: (r.StartMileage || 0) + 150, damageCost: 0 });
-            setModalState({ type: 'return_vehicle', data: r });
-          }}
-        />
-      )}
+          {/* Tab: Active Ongoing Rentals */}
+          {activeTab === 'rentals' && (
+            <RentalsTab 
+              activeRentals={activeRentals}
+              role={role}
+              onReturnVehicle={(r) => {
+                setFormData({ rentalId: r.RentalID, endMileage: (r.StartMileage || 0) + 150, damageCost: 0 });
+                setModalState({ type: 'return_vehicle', data: r });
+              }}
+            />
+          )}
 
-      {/* Tab: Payments, Fines & My Invoices */}
-      {(activeTab === 'payments' || activeTab === 'my_invoices') && (
-        <PaymentsTab 
-          isMyInvoices={activeTab === 'my_invoices'}
-          outstandingPayments={outstandingPayments}
-          fines={fines}
-          onSettlePayment={(p) => {
-            setFormData({ paymentId: p.PaymentID, method: 'Credit Card', amount: p.Amount });
-            setModalState({ type: 'process_payment', data: p });
-          }}
-        />
-      )}
+          {/* Tab: Payments, Fines & My Invoices */}
+          {(activeTab === 'payments' || activeTab === 'my_invoices') && (
+            <PaymentsTab 
+              isMyInvoices={activeTab === 'my_invoices'}
+              outstandingPayments={outstandingPayments}
+              fines={fines}
+              onSettlePayment={(p) => {
+                setFormData({ paymentId: p.PaymentID, method: 'Credit Card', amount: p.Amount });
+                setModalState({ type: 'process_payment', data: p });
+              }}
+            />
+          )}
 
-      {/* Tab: Vehicle Maintenance */}
-      {activeTab === 'maintenance' && (
-        <MaintenanceTab 
-          maintenance={maintenance}
-          role={role}
-          onScheduleMaintenance={() => {
-            setFormData({
-              vehicleId: 1,
-              branchId: 1,
-              serviceDate: new Date().toISOString().split('T')[0],
-              cost: 25000,
-              description: 'Periodic Oil & Brake Service'
-            });
-            setModalState({ type: 'schedule_maintenance', data: null });
-          }}
-          onUpdateStatus={(m) => {
-            setFormData({ status: m.MaintenanceStatus });
-            setModalState({ type: 'update_maint_status', data: m });
-          }}
-        />
-      )}
+          {/* Tab: Vehicle Maintenance */}
+          {activeTab === 'maintenance' && (
+            <MaintenanceTab 
+              maintenance={maintenance}
+              role={role}
+              onScheduleMaintenance={() => {
+                setFormData({
+                  vehicleId: 1,
+                  branchId: 1,
+                  serviceDate: new Date().toISOString().split('T')[0],
+                  cost: 25000,
+                  description: 'Periodic Oil & Brake Service'
+                });
+                setModalState({ type: 'schedule_maintenance', data: null });
+              }}
+              onUpdateStatus={(m) => {
+                setFormData({ status: m.MaintenanceStatus });
+                setModalState({ type: 'update_maint_status', data: m });
+              }}
+            />
+          )}
 
-      {/* Tab: Customers Directory */}
-      {activeTab === 'customers' && (
-        <CustomersTab 
-          customers={customers}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-        />
-      )}
+          {/* Tab: Customers Directory */}
+          {activeTab === 'customers' && (
+            <CustomersTab 
+              customers={customers}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+            />
+          )}
 
-      {/* Tab: Branches & Operational Hubs */}
-      {activeTab === 'branches' && (
-        <BranchesTab 
-          branches={branches}
-          branchPerformance={branchPerformance}
-          role={role}
-        />
-      )}
+          {/* Tab: Branches & Operational Hubs */}
+          {activeTab === 'branches' && (
+            <BranchesTab 
+              branches={branches}
+              branchPerformance={branchPerformance}
+              role={role}
+            />
+          )}
 
-      {/* Tab: Live Database Trigger Audit Logs */}
-      {activeTab === 'audit' && (
-        <AuditLogsTab auditLogs={auditLogs} />
-      )}
+          {/* Tab: Live Database Trigger Audit Logs */}
+          {activeTab === 'audit' && (
+            <AuditLogsTab auditLogs={auditLogs} />
+          )}
 
-      {/* Tab: ADBMS Viva Concept Demonstrator */}
-      {activeTab === 'viva' && (
-        <VivaTab 
-          trapResult={trapResult}
-          onRunSimulation={runErrorSimulation}
-        />
+          {/* Tab: ADBMS Viva Concept Demonstrator */}
+          {activeTab === 'viva' && (
+            <VivaTab 
+              trapResult={trapResult}
+              onRunSimulation={runErrorSimulation}
+            />
+          )}
+        </div>
       )}
 
       {/* Reusable Action Modals */}

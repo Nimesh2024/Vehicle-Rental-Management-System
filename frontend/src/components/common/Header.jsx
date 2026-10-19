@@ -3,12 +3,20 @@ import React from 'react';
 export default function Header({ currentUser, onOpenLogin, onLogout }) {
   return (
     <header className="header">
-      <div>
-        <h1 className="title">AutoManager Pro</h1>
-        <div style={{ color: 'var(--text-muted)' }}>
-          {currentUser 
-            ? `Signed in as ${currentUser.RoleName}`
-            : 'Premium Island-Wide Vehicle Rental Services • Powered by ADBMS'}
+      <div className="brand-box">
+        <div className="brand-logo-badge">
+          <i className="fa-solid fa-car-side"></i>
+          <span>RENTO</span>
+        </div>
+        <div className="brand-text">
+          <div className="brand-title">
+            AutoManager <span>Pro</span>
+          </div>
+          <div className="brand-tagline">
+            {currentUser 
+              ? `Signed in as ${currentUser.RoleName}`
+              : 'Sri Lanka Vehicle Rentals • Powered by ADBMS'}
+          </div>
         </div>
       </div>
 
@@ -32,11 +40,7 @@ export default function Header({ currentUser, onOpenLogin, onLogout }) {
             className="btn-login" 
             onClick={onOpenLogin}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-              <polyline points="10 17 15 12 10 7"></polyline>
-              <line x1="15" y1="12" x2="3" y2="12"></line>
-            </svg>
+            <i className="fa-solid fa-user-lock"></i>
             <span>Sign In / Register</span>
           </button>
         )}
