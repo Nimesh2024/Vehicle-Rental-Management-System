@@ -3,8 +3,10 @@ import React from 'react';
 export default function PaymentsTab({
   isMyInvoices = false,
   outstandingPayments = [],
+  allPayments = [],
   fines = [],
-  onSettlePayment
+  onSettlePayment,
+  onViewReceipt
 }) {
   return (
     <>
@@ -142,6 +144,69 @@ export default function PaymentsTab({
                       <span className={`badge ${(f.Status || 'pending').toLowerCase()}`}>
                         {f.Status}
                       </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Settled Payment History & Receipts */}
+      <section className="section">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title">🧾 Completed Payment Receipts</h2>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+              Member 4 ProcessPayment() Transaction Logs • Click "🖨️ Receipt" to print official tax invoices
+            </div>
+          </div>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Receipt #</th>
+                <th>Customer</th>
+                <th>Vehicle</th>
+                <th>Method</th>
+                <th>Total Paid (LKR)</th>
+                <th>Settlement Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allPayments.filter(p => p.PaymentStatus === 'Completed').length === 0 ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                    No completed payments recorded yet.
+                  </td>
+                </tr>
+              ) : (
+                allPayments.filter(p => p.PaymentStatus === 'Completed').map((p) => (
+                  <tr key={p.PaymentID}>
+                    <td><strong style={{ color: '#eab308' }}>#REC-{p.PaymentID}</strong></td>
+                    <td>{p.FirstName} {p.LastName}</td>
+                    <td>{p.Make} {p.Model} ({p.RegistrationNumber})</td>
+                    <td>
+                      <span className="badge available">
+                        {p.PaymentMethod === 'Credit Card' ? '💳 Card' : p.PaymentMethod === 'Bank Transfer' ? '🏦 Bank Wire' : p.PaymentMethod}
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: 700, color: '#34d399' }}>
+                      LKR {Number(p.Amount).toLocaleString()}
+                    </td>
+                    <td>{new Date(p.PaymentDate).toLocaleDateString()}</td>
+                    <td>
+                      {onViewReceipt && (
+                        <button 
+                          className="btn-primary btn-sm"
+                          onClick={() => onViewReceipt(p)}
+                        >
+                          🖨️ Receipt
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

@@ -12,6 +12,7 @@ import Toast from './components/common/Toast';
 // Modals
 import AuthModal from './components/modals/AuthModal';
 import ActionModal from './components/modals/ActionModal';
+import ReceiptModal from './components/modals/ReceiptModal';
 
 // Tab Views
 import BrowseTab from './components/tabs/BrowseTab';
@@ -73,6 +74,9 @@ function App() {
   const [formData, setFormData] = useState({});
   const [modalError, setModalError] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
+
+  // Receipt Modal state
+  const [receiptData, setReceiptData] = useState(null);
 
   // Viva Simulation State
   const [trapResult, setTrapResult] = useState(null);
@@ -262,6 +266,37 @@ function App() {
         result = await api.returnVehicle(formData);
       } else if (type === 'process_payment') {
         result = await api.processPayment(formData);
+        
+        const baseAmount = Number(data.Amount) - Number(data.TotalFines || 0);
+        let receiptPayload = {
+          paymentId: data.PaymentID,
+          rentalId: data.RentalID,
+          customerName: `${data.FirstName || ''} ${data.LastName || ''}`.trim() || 'Customer',
+          customerPhone: data.Phone || '',
+          vehicle: data.Make ? `${data.Make} ${data.Model} (${data.RegistrationNumber})` : 'Vehicle Rental',
+          amount: formData.amount || data.Amount,
+          baseAmount: baseAmount > 0 ? baseAmount : (formData.amount || data.Amount),
+          totalFines: Number(data.TotalFines || 0),
+          method: formData.method || 'Credit Card',
+          date: new Date().toLocaleString(),
+          transactionRef: `TXN-${data.PaymentID}-${Date.now().toString().slice(-6)}`
+        };
+
+        try {
+          const apiReceipt = await api.fetchPaymentReceipt(formData.paymentId);
+          if (apiReceipt) {
+            receiptPayload = {
+              ...receiptPayload,
+              ...apiReceipt,
+              customerName: `${apiReceipt.FirstName || ''} ${apiReceipt.LastName || ''}`.trim() || receiptPayload.customerName,
+              vehicle: apiReceipt.Make ? `${apiReceipt.Make} ${apiReceipt.Model} (${apiReceipt.RegistrationNumber})` : receiptPayload.vehicle,
+              totalFines: Number(apiReceipt.TotalFines || 0),
+              baseAmount: Number(apiReceipt.Amount) - Number(apiReceipt.TotalFines || 0)
+            };
+          }
+        } catch (_) {}
+
+        setReceiptData(receiptPayload);
       } else if (type === 'schedule_maintenance') {
         result = await api.scheduleMaintenance(formData);
       } else if (type === 'update_vehicle_status') {
@@ -445,10 +480,26 @@ function App() {
             <PaymentsTab 
               isMyInvoices={activeTab === 'my_invoices'}
               outstandingPayments={outstandingPayments}
+              allPayments={payments}
               fines={fines}
               onSettlePayment={(p) => {
                 setFormData({ paymentId: p.PaymentID, method: 'Credit Card', amount: p.Amount });
                 setModalState({ type: 'process_payment', data: p });
+              }}
+              onViewReceipt={(p) => {
+                const baseAmount = Number(p.Amount) - Number(p.TotalFines || 0);
+                setReceiptData({
+                  paymentId: p.PaymentID,
+                  rentalId: p.RentalID,
+                  customerName: `${p.FirstName || ''} ${p.LastName || ''}`.trim() || 'Customer',
+                  vehicle: p.Make ? `${p.Make} ${p.Model} (${p.RegistrationNumber})` : 'Vehicle Rental',
+                  amount: p.Amount,
+                  baseAmount: baseAmount > 0 ? baseAmount : p.Amount,
+                  totalFines: Number(p.TotalFines || 0),
+                  method: p.PaymentMethod || 'Credit Card',
+                  date: new Date(p.PaymentDate).toLocaleString(),
+                  transactionRef: `TXN-${p.PaymentID}`
+                });
               }}
             />
           )}
@@ -524,6 +575,14 @@ function App() {
         customers={customers}
         currentUser={currentUser}
       />
+
+      {/* Payment Receipt Modal */}
+      {receiptData && (
+        <ReceiptModal
+          receipt={receiptData}
+          onClose={() => setReceiptData(null)}
+        />
+      )}
 
       {/* Auth Modal (Login & Customer Registration) */}
       <AuthModal 

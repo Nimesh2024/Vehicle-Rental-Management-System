@@ -188,6 +188,11 @@ export async function processPayment(paymentData) {
   return handleResponse(res, 'Failed to process payment');
 }
 
+export async function fetchPaymentReceipt(paymentId) {
+  const res = await fetch(`${API_BASE}/payments/receipt/${paymentId}`);
+  return handleResponse(res, 'Failed to fetch receipt');
+}
+
 // ==========================================
 // 5. MAINTENANCE & REPORTS
 // ==========================================

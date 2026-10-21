@@ -2138,3 +2138,348 @@ select.form-input option:checked {
   margin: 0;
   line-height: 1.4;
 }
+
+/* ========================================================
+   OFFICIAL PAYMENT RECEIPT STYLING & PRINT MEDIA
+   ======================================================== */
+.receipt-modal-overlay {
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(16px);
+  z-index: 2500;
+  overflow-y: auto;
+  padding: 30px 15px;
+}
+
+.receipt-paper {
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 680px;
+  margin: auto;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9), 0 0 40px rgba(245, 197, 24, 0.15);
+  overflow: hidden;
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.receipt-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0f172a;
+  padding: 12px 24px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.btn-print {
+  background: var(--yellow);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-print:hover {
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.btn-close-receipt {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-close-receipt:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.receipt-content {
+  padding: 36px 40px;
+}
+
+.receipt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.receipt-brand .receipt-logo {
+  font-size: 24px;
+  font-weight: 900;
+  color: #000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.5px;
+}
+
+.receipt-brand .receipt-logo i {
+  color: #eab308;
+}
+
+.receipt-company {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  margin-top: 4px;
+}
+
+.receipt-subtext {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.receipt-badge-box {
+  text-align: right;
+}
+
+.receipt-paid-stamp {
+  display: inline-block;
+  border: 2px solid #16a34a;
+  color: #16a34a;
+  padding: 3px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.receipt-doc-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.5px;
+}
+
+.receipt-id {
+  font-size: 13px;
+  font-weight: 800;
+  color: #eab308;
+  margin-top: 2px;
+}
+
+.receipt-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 22px 0;
+}
+
+.receipt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+}
+
+.receipt-col {
+  font-size: 12px;
+}
+
+.receipt-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.receipt-value-bold {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.receipt-value {
+  font-size: 12px;
+  color: #334155;
+}
+
+.receipt-value-sub {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.receipt-table th {
+  background: #f8fafc;
+  color: #475569;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.receipt-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.receipt-row-desc {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.receipt-penalty-tag {
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.receipt-table tfoot td {
+  padding: 8px 12px;
+  border: none;
+  font-size: 12px;
+  color: #334155;
+}
+
+.receipt-total-row td {
+  border-top: 2px solid #0f172a !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  padding-top: 12px !important;
+}
+
+.receipt-footer {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px dashed #cbd5e1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.receipt-seal-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.receipt-qr-placeholder {
+  width: 48px;
+  height: 48px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.receipt-qr-placeholder span {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.receipt-footer-notes {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.receipt-footer-notes code {
+  background: #f1f5f9;
+  padding: 1px 4px;
+  border-radius: 4px;
+  color: #0f172a;
+}
+
+.receipt-signature-area {
+  text-align: center;
+  min-width: 140px;
+}
+
+.receipt-sig-line {
+  border-bottom: 1px solid #94a3b8;
+  height: 24px;
+  margin-bottom: 4px;
+}
+
+.receipt-sig-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Print Rules */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .receipt-paper,
+  .receipt-paper * {
+    visibility: visible;
+  }
+  
+  .receipt-modal-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  
+  .receipt-paper {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  @page {
+    margin: 1cm;
+    size: A4 portrait;
+  }
+}
