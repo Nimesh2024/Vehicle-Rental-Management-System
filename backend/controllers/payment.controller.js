@@ -59,8 +59,8 @@ export const PaymentController = {
 
     async getReceipt(req, res) {
         try {
-            const receipt = await PaymentModel.getReceipt(req.params.paymentId);
-            if (!receipt) return res.status(404).json({ error: 'Receipt not found' });
+            const receipt = await PaymentModel.getReceiptData(parseInt(req.params.id));
+            if (!receipt) return res.status(404).json({ error: 'Receipt not found.' });
             res.json(receipt);
         } catch (err) {
             res.status(500).json({ error: err.sqlMessage || err.message });
