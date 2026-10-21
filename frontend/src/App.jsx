@@ -12,6 +12,7 @@ import Toast from './components/common/Toast';
 // Modals
 import AuthModal from './components/modals/AuthModal';
 import ActionModal from './components/modals/ActionModal';
+import ReceiptModal from './components/modals/ReceiptModal';
 
 // Tab Views
 import BrowseTab from './components/tabs/BrowseTab';
@@ -71,6 +72,9 @@ function App() {
   const [formData, setFormData] = useState({});
   const [modalError, setModalError] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
+
+  // Receipt Modal state
+  const [receiptData, setReceiptData] = useState(null);
 
   // Viva Simulation State
   const [trapResult, setTrapResult] = useState(null);
@@ -232,6 +236,11 @@ function App() {
         result = await api.returnVehicle(formData);
       } else if (type === 'process_payment') {
         result = await api.processPayment(formData);
+        // Fetch receipt data and show receipt modal
+        try {
+          const receipt = await api.fetchPaymentReceipt(formData.paymentId);
+          setReceiptData(receipt);
+        } catch (_) { /* receipt fetch is best-effort */ }
       } else if (type === 'schedule_maintenance') {
         result = await api.scheduleMaintenance(formData);
       } else if (type === 'update_vehicle_status') {
@@ -479,6 +488,14 @@ function App() {
         branches={branches}
         allVehicles={allVehicles}
       />
+
+      {/* Payment Receipt Modal */}
+      {receiptData && (
+        <ReceiptModal
+          receipt={receiptData}
+          onClose={() => setReceiptData(null)}
+        />
+      )}
 
       {/* Auth Modal (Login & Customer Registration) */}
       <AuthModal 

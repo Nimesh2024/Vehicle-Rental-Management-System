@@ -1388,3 +1388,272 @@ tr:hover td {
     justify-content: center;
   }
 }
+
+/* ========================================================
+   RECEIPT MODAL — SCREEN STYLES
+   ======================================================== */
+.receipt-modal-content {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.receipt-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.75rem;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-bottom: 1px solid rgba(245, 197, 24, 0.25);
+}
+
+.receipt-logo {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #f5c518;
+  letter-spacing: -0.02em;
+}
+
+.receipt-tagline {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.45);
+  margin-top: 0.1rem;
+  letter-spacing: 0.04em;
+}
+
+.receipt-body {
+  padding: 1.5rem 1.75rem;
+  background: #0c0c0c;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.receipt-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.receipt-title {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-white);
+  letter-spacing: 0.1em;
+}
+
+.receipt-number {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  color: #f5c518;
+  letter-spacing: 0.08em;
+  margin-top: 0.25rem;
+  background: rgba(245, 197, 24, 0.1);
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid rgba(245, 197, 24, 0.3);
+}
+
+.receipt-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(245,197,24,0.35), transparent);
+  margin: 1rem 0;
+}
+
+.receipt-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.receipt-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.receipt-card-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(245,197,24,0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+}
+
+.receipt-card-value {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-white);
+  margin-bottom: 0.3rem;
+}
+
+.receipt-card-sub {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.5;
+}
+
+.receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.receipt-table thead th {
+  padding: 0.55rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(255,255,255,0.45);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  text-align: left;
+}
+
+.receipt-table tbody td {
+  padding: 0.6rem 0.75rem;
+  color: var(--text-gray);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.receipt-table tfoot td {
+  padding: 0.8rem 0.75rem;
+  border-top: 1px solid rgba(245,197,24,0.3);
+  color: #f5c518;
+  font-size: 1rem;
+}
+
+.receipt-sub-label {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.4);
+}
+
+.receipt-total-row td {
+  background: rgba(245,197,24,0.06);
+}
+
+.receipt-footer-note {
+  margin-top: 1.25rem;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.3);
+  text-align: center;
+  padding: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  line-height: 1.6;
+}
+
+.receipt-action-bar {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.75rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* ========================================================
+   RECEIPT — PRINT / PDF STYLES
+   When user hits Print or Save as PDF, only the receipt
+   body is shown on a clean white page.
+   ======================================================== */
+@media print {
+  /* Hide everything except the receipt body */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Show only the receipt print area */
+  #receipt-print-area,
+  #receipt-print-area * {
+    visibility: visible !important;
+  }
+
+  /* Position receipt at the top-left of the print page */
+  #receipt-print-area {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-height: none !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #111111 !important;
+    padding: 2rem !important;
+    font-size: 11pt !important;
+  }
+
+  /* Light theme overrides for print */
+  #receipt-print-area .receipt-divider {
+    background: #cccccc !important;
+    height: 1px !important;
+  }
+
+  #receipt-print-area .receipt-title {
+    color: #111 !important;
+  }
+
+  #receipt-print-area .receipt-number {
+    color: #7a5c00 !important;
+    background: #fff8e1 !important;
+    border-color: #c9a227 !important;
+  }
+
+  #receipt-print-area .receipt-card {
+    background: #f8f8f8 !important;
+    border-color: #ddd !important;
+  }
+
+  #receipt-print-area .receipt-card-title {
+    color: #7a5c00 !important;
+  }
+
+  #receipt-print-area .receipt-card-value {
+    color: #111 !important;
+  }
+
+  #receipt-print-area .receipt-card-sub {
+    color: #555 !important;
+  }
+
+  #receipt-print-area .receipt-table thead th {
+    color: #555 !important;
+    border-bottom-color: #ccc !important;
+  }
+
+  #receipt-print-area .receipt-table tbody td {
+    color: #222 !important;
+    border-bottom-color: #eee !important;
+  }
+
+  #receipt-print-area .receipt-table tfoot td {
+    color: #7a5c00 !important;
+    border-top-color: #c9a227 !important;
+    background: #fff8e1 !important;
+  }
+
+  #receipt-print-area .receipt-footer-note {
+    color: #888 !important;
+    border-top-color: #ddd !important;
+  }
+
+  #receipt-print-area .receipt-sub-label {
+    color: #888 !important;
+  }
+
+  .receipt-screen-only {
+    display: none !important;
+  }
+
+  @page {
+    margin: 0;
+    size: A4;
+  }
+}
