@@ -374,9 +374,8 @@ export default function ActionModal({
                   value={formData.method || 'Credit Card'} 
                   onChange={(e) => setFormData({ ...formData, method: e.target.value })}
                 >
-                  <option value="Credit Card">Credit Card</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Credit Card" style={{ background: '#1a1a1a', color: '#ffffff' }}>Credit Card</option>
+                  <option value="Bank Transfer" style={{ background: '#1a1a1a', color: '#ffffff' }}>Bank Transfer</option>
                 </select>
               </div>
               <div className="form-group">
