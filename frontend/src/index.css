@@ -1124,6 +1124,25 @@ tr:hover td {
   color: var(--text-gray);
 }
 
+select.form-input {
+  cursor: pointer;
+  background-color: #141416;
+}
+
+select.form-input option,
+.form-input option {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+select.form-input option:hover,
+select.form-input option:checked {
+  background-color: #27272a !important;
+  color: var(--yellow) !important;
+}
+
 .btn-submit {
   width: 100%;
   background: var(--yellow);

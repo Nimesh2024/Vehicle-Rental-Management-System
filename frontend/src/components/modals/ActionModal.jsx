@@ -445,36 +445,71 @@ export default function ActionModal({
 
           {/* UPDATE STATUS FORMS */}
           {type === 'update_vehicle_status' && (
-            <div className="form-group">
-              <label className="form-label">New Vehicle Status</label>
-              <select 
-                className="form-input" 
-                value={formData.status || 'Available'} 
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <option value="Available">Available</option>
-                <option value="Rented">Rented</option>
-                <option value="Maintenance_Required">Maintenance_Required</option>
-                <option value="In_Maintenance">In_Maintenance</option>
-                <option value="Out_Of_Service">Out_Of_Service</option>
-              </select>
-            </div>
+            <>
+              <div className="form-group">
+                <label className="form-label">Vehicle</label>
+                <input 
+                  className="form-input" 
+                  disabled 
+                  value={`Vehicle #${data?.VehicleID} • ${data?.Make || ''} ${data?.Model || ''} (${data?.RegistrationNumber || ''})`} 
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">New Vehicle Status *</label>
+                <select 
+                  className="form-input" 
+                  value={formData.status || 'Available'} 
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="Available">Available</option>
+                  <option value="Rented">Rented</option>
+                  <option value="Maintenance_Required">Maintenance_Required</option>
+                  <option value="In_Maintenance">In_Maintenance</option>
+                  <option value="Out_Of_Service">Out_Of_Service</option>
+                </select>
+              </div>
+            </>
           )}
 
           {type === 'update_maint_status' && (
-            <div className="form-group">
-              <label className="form-label">Maintenance Status</label>
-              <select 
-                className="form-input" 
-                value={formData.status || 'Completed'} 
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <option value="Scheduled">Scheduled</option>
-                <option value="In_Progress">In_Progress</option>
-                <option value="Completed">Completed (Auto-resets car to Available)</option>
-                <option value="Cancelled">Cancelled</option>
-              </select>
-            </div>
+            <>
+              <div className="form-group">
+                <label className="form-label">Maintenance Ticket</label>
+                <input 
+                  className="form-input" 
+                  disabled 
+                  value={`Ticket #${data?.MaintenanceID} • ${data?.RegistrationNumber || ''} (${data?.BranchName || ''})`} 
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Maintenance Status *</label>
+                <select 
+                  className="form-input" 
+                  value={formData.status || 'Completed'} 
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="Scheduled">Scheduled (In Queue)</option>
+                  <option value="In_Progress">In_Progress (Under Service)</option>
+                  <option value="Completed">Completed (Auto-resets Car to Available)</option>
+                  <option value="Cancelled">Cancelled (Aborted)</option>
+                </select>
+              </div>
+
+              {formData.status === 'Completed' && (
+                <div style={{
+                  background: 'rgba(34, 197, 94, 0.08)',
+                  border: '1px solid rgba(34, 197, 94, 0.25)',
+                  borderRadius: '8px',
+                  padding: '0.65rem 0.85rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.82rem',
+                  color: '#4ade80'
+                }}>
+                  ✓ <strong>Trigger ChangeVehToAvailable:</strong> Marking as <em>Completed</em> will automatically restore this vehicle to <strong>Available</strong> status in the fleet.
+                </div>
+              )}
+            </>
           )}
 
           <button 
