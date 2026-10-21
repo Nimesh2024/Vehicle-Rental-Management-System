@@ -48,6 +48,66 @@ export const PaymentModel = {
     },
 
     /**
+     * Get full receipt data for a specific payment (for receipt generation)
+     */
+    async getReceiptData(paymentId) {
+        const [[payment]] = await db.query(`
+            SELECT
+                p.PaymentID,
+                p.RentalID,
+                p.Amount         AS TotalAmount,
+                p.PaymentDate,
+                p.PaymentMethod,
+                p.PaymentStatus,
+                r.RentalDate,
+                r.ActualStartDate,
+                r.ActualEndDate,
+                r.StartMileage,
+                r.EndMileage,
+                b.StartDate,
+                b.EndDate,
+                DATEDIFF(b.EndDate, b.StartDate) AS RentalDays,
+                vc.DailyRate,
+                DATEDIFF(b.EndDate, b.StartDate) * vc.DailyRate AS RentalCharge,
+                c.CustomerID,
+                c.FirstName,
+                c.LastName,
+                c.Phone,
+                c.Email,
+                c.NIC_Passport,
+                v.VehicleID,
+                v.Make,
+                v.Model,
+                v.RegistrationNumber,
+                v.Year           AS VehicleYear,
+                vc.CategoryName
+            FROM Payments p
+            JOIN Rentals r         ON p.RentalID    = r.RentalID
+            JOIN Bookings b        ON r.BookingID   = b.BookingID
+            JOIN Customers c       ON b.CustomerID  = c.CustomerID
+            JOIN Vehicles v        ON b.VehicleID   = v.VehicleID
+            JOIN VehicleCategories vc ON v.CategoryID = vc.CategoryID
+            WHERE p.PaymentID = ?
+        `, [paymentId]);
+
+        if (!payment) return null;
+
+        // Fetch fines linked to this rental
+        const [fines] = await db.query(`
+            SELECT FineID, FineType, Amount, Description, Status
+            FROM Fines
+            WHERE RentalID = ?
+            ORDER BY FineID ASC
+        `, [payment.RentalID]);
+
+        const fineTotal = fines.reduce((sum, f) => sum + Number(f.Amount), 0);
+        const year      = new Date(payment.PaymentDate || Date.now()).getFullYear();
+        const receiptNo = `REC-${year}-${String(paymentId).padStart(4, '0')}`;
+
+        return { ...payment, fines, fineTotal, receiptNo, discount: 0 };
+    },
+
+    /**
      * Get all fine records with customer and vehicle details
      */
     async getAllFines() {
