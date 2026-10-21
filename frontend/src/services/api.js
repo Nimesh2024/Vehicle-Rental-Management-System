@@ -37,6 +37,29 @@ export async function fetchCustomersAll() {
   return handleResponse(res, 'Failed to fetch customers');
 }
 
+export async function fetchUsersAll() {
+  const res = await fetch(`${API_BASE}/auth/users`);
+  return handleResponse(res, 'Failed to fetch system users');
+}
+
+export async function createAdminUser(userData) {
+  const res = await fetch(`${API_BASE}/auth/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData)
+  });
+  return handleResponse(res, 'Failed to create user account');
+}
+
+export async function updateAdminUser(userId, userData) {
+  const res = await fetch(`${API_BASE}/auth/users/${userId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData)
+  });
+  return handleResponse(res, 'Failed to update user profile');
+}
+
 // ==========================================
 // 2. VEHICLES & FLEET
 // ==========================================
