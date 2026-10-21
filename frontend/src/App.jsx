@@ -266,11 +266,37 @@ function App() {
         result = await api.returnVehicle(formData);
       } else if (type === 'process_payment') {
         result = await api.processPayment(formData);
-        // Fetch receipt data and show receipt modal
+        
+        const baseAmount = Number(data.Amount) - Number(data.TotalFines || 0);
+        let receiptPayload = {
+          paymentId: data.PaymentID,
+          rentalId: data.RentalID,
+          customerName: `${data.FirstName || ''} ${data.LastName || ''}`.trim() || 'Customer',
+          customerPhone: data.Phone || '',
+          vehicle: data.Make ? `${data.Make} ${data.Model} (${data.RegistrationNumber})` : 'Vehicle Rental',
+          amount: formData.amount || data.Amount,
+          baseAmount: baseAmount > 0 ? baseAmount : (formData.amount || data.Amount),
+          totalFines: Number(data.TotalFines || 0),
+          method: formData.method || 'Credit Card',
+          date: new Date().toLocaleString(),
+          transactionRef: `TXN-${data.PaymentID}-${Date.now().toString().slice(-6)}`
+        };
+
         try {
-          const receipt = await api.fetchPaymentReceipt(formData.paymentId);
-          setReceiptData(receipt);
-        } catch (_) { /* receipt fetch is best-effort */ }
+          const apiReceipt = await api.fetchPaymentReceipt(formData.paymentId);
+          if (apiReceipt) {
+            receiptPayload = {
+              ...receiptPayload,
+              ...apiReceipt,
+              customerName: `${apiReceipt.FirstName || ''} ${apiReceipt.LastName || ''}`.trim() || receiptPayload.customerName,
+              vehicle: apiReceipt.Make ? `${apiReceipt.Make} ${apiReceipt.Model} (${apiReceipt.RegistrationNumber})` : receiptPayload.vehicle,
+              totalFines: Number(apiReceipt.TotalFines || 0),
+              baseAmount: Number(apiReceipt.Amount) - Number(apiReceipt.TotalFines || 0)
+            };
+          }
+        } catch (_) {}
+
+        setReceiptData(receiptPayload);
       } else if (type === 'schedule_maintenance') {
         result = await api.scheduleMaintenance(formData);
       } else if (type === 'update_vehicle_status') {
@@ -454,10 +480,26 @@ function App() {
             <PaymentsTab 
               isMyInvoices={activeTab === 'my_invoices'}
               outstandingPayments={outstandingPayments}
+              allPayments={payments}
               fines={fines}
               onSettlePayment={(p) => {
                 setFormData({ paymentId: p.PaymentID, method: 'Credit Card', amount: p.Amount });
                 setModalState({ type: 'process_payment', data: p });
+              }}
+              onViewReceipt={(p) => {
+                const baseAmount = Number(p.Amount) - Number(p.TotalFines || 0);
+                setReceiptData({
+                  paymentId: p.PaymentID,
+                  rentalId: p.RentalID,
+                  customerName: `${p.FirstName || ''} ${p.LastName || ''}`.trim() || 'Customer',
+                  vehicle: p.Make ? `${p.Make} ${p.Model} (${p.RegistrationNumber})` : 'Vehicle Rental',
+                  amount: p.Amount,
+                  baseAmount: baseAmount > 0 ? baseAmount : p.Amount,
+                  totalFines: Number(p.TotalFines || 0),
+                  method: p.PaymentMethod || 'Credit Card',
+                  date: new Date(p.PaymentDate).toLocaleString(),
+                  transactionRef: `TXN-${p.PaymentID}`
+                });
               }}
             />
           )}

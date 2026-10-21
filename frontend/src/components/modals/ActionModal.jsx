@@ -22,8 +22,8 @@ export default function ActionModal({
   // Active bookings for the currently selected vehicle
   const activeVehicleBookings = React.useMemo(() => {
     if (type !== 'book_vehicle' || !data?.VehicleID || !bookings) return [];
-    return bookings.filter(b => 
-      Number(b.VehicleID) === Number(data.VehicleID) && 
+    return bookings.filter(b =>
+      Number(b.VehicleID) === Number(data.VehicleID) &&
       ['Pending', 'Confirmed'].includes(b.Status)
     );
   }, [type, data, bookings]);
@@ -86,19 +86,19 @@ export default function ActionModal({
             <>
               <div className="form-group">
                 <label className="form-label">Vehicle</label>
-                <input 
-                  className="form-input" 
-                  disabled 
-                  value={`${data.Make} ${data.Model} (${data.RegistrationNumber}) - LKR ${Number(data.DailyRate).toLocaleString()}/day`} 
+                <input
+                  className="form-input"
+                  disabled
+                  value={`${data.Make} ${data.Model} (${data.RegistrationNumber}) - LKR ${Number(data.DailyRate).toLocaleString()}/day`}
                 />
               </div>
 
               {currentUser?.RoleName !== 'Customer' && customers && customers.length > 0 && (
                 <div className="form-group">
                   <label className="form-label">Customer to Reserve For *</label>
-                  <select 
-                    className="form-input" 
-                    value={formData.customerId || customers[0]?.CustomerID} 
+                  <select
+                    className="form-input"
+                    value={formData.customerId || customers[0]?.CustomerID}
                     onChange={(e) => setFormData({ ...formData, customerId: parseInt(e.target.value) })}
                   >
                     {customers.map((c) => (
@@ -125,7 +125,7 @@ export default function ActionModal({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     {activeVehicleBookings.map((b) => (
                       <div key={b.BookingID} style={{ color: '#cbd5e1', fontSize: '0.8rem' }}>
-                        • <strong style={{ color: '#f1f5f9' }}>{new Date(b.StartDate).toLocaleDateString()}</strong> to <strong style={{ color: '#f1f5f9' }}>{new Date(b.EndDate).toLocaleDateString()}</strong> 
+                        • <strong style={{ color: '#f1f5f9' }}>{new Date(b.StartDate).toLocaleDateString()}</strong> to <strong style={{ color: '#f1f5f9' }}>{new Date(b.EndDate).toLocaleDateString()}</strong>
                         <span style={{ color: '#eab308', marginLeft: '0.35rem', fontWeight: 600 }}>({b.Status})</span>
                       </div>
                     ))}
@@ -170,24 +170,24 @@ export default function ActionModal({
 
               <div className="form-group">
                 <label className="form-label">Start Date *</label>
-                <input 
-                  type="date" 
-                  required 
+                <input
+                  type="date"
+                  required
                   min={new Date().toISOString().split('T')[0]}
-                  className="form-input" 
+                  className="form-input"
                   value={formData.startDate || ''}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} 
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">End Date *</label>
-                <input 
-                  type="date" 
-                  required 
+                <input
+                  type="date"
+                  required
                   min={formData.startDate || new Date().toISOString().split('T')[0]}
-                  className="form-input" 
+                  className="form-input"
                   value={formData.endDate || ''}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} 
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                 />
               </div>
             </>
@@ -198,9 +198,9 @@ export default function ActionModal({
             <>
               <div className="form-group">
                 <label className="form-label">Category</label>
-                <select 
-                  className="form-input" 
-                  value={formData.categoryId || 1} 
+                <select
+                  className="form-input"
+                  value={formData.categoryId || 1}
                   onChange={(e) => setFormData({ ...formData, categoryId: parseInt(e.target.value) })}
                 >
                   {categories.map((c) => (
@@ -212,9 +212,9 @@ export default function ActionModal({
               </div>
               <div className="form-group">
                 <label className="form-label">Branch</label>
-                <select 
-                  className="form-input" 
-                  value={formData.branchId || 1} 
+                <select
+                  className="form-input"
+                  value={formData.branchId || 1}
                   onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })}
                 >
                   {branches.map((b) => (
@@ -225,50 +225,50 @@ export default function ActionModal({
               <div className="form-group">
                 <label className="form-label">Make & Model</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                  <input 
-                    placeholder="Make (e.g. Toyota)" 
-                    required 
-                    className="form-input" 
-                    value={formData.make || ''} 
-                    onChange={(e) => setFormData({ ...formData, make: e.target.value })} 
+                  <input
+                    placeholder="Make (e.g. Toyota)"
+                    required
+                    className="form-input"
+                    value={formData.make || ''}
+                    onChange={(e) => setFormData({ ...formData, make: e.target.value })}
                   />
-                  <input 
-                    placeholder="Model (e.g. Prius)" 
-                    required 
-                    className="form-input" 
-                    value={formData.model || ''} 
-                    onChange={(e) => setFormData({ ...formData, model: e.target.value })} 
+                  <input
+                    placeholder="Model (e.g. Prius)"
+                    required
+                    className="form-input"
+                    value={formData.model || ''}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                   />
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Registration Plate & Year</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem' }}>
-                  <input 
-                    placeholder="Plate (e.g. CBF-8899)" 
-                    required 
-                    className="form-input" 
-                    value={formData.registration || ''} 
-                    onChange={(e) => setFormData({ ...formData, registration: e.target.value })} 
+                  <input
+                    placeholder="Plate (e.g. CBF-8899)"
+                    required
+                    className="form-input"
+                    value={formData.registration || ''}
+                    onChange={(e) => setFormData({ ...formData, registration: e.target.value })}
                   />
-                  <input 
-                    placeholder="Year" 
-                    type="number" 
-                    required 
-                    className="form-input" 
-                    value={formData.year || 2024} 
-                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })} 
+                  <input
+                    placeholder="Year"
+                    type="number"
+                    required
+                    className="form-input"
+                    value={formData.year || 2024}
+                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
                   />
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Purchase Date</label>
-                <input 
-                  type="date" 
-                  required 
-                  className="form-input" 
-                  value={formData.purchaseDate || ''} 
-                  onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })} 
+                <input
+                  type="date"
+                  required
+                  className="form-input"
+                  value={formData.purchaseDate || ''}
+                  onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
                 />
               </div>
             </>
@@ -279,20 +279,20 @@ export default function ActionModal({
             <>
               <div className="form-group">
                 <label className="form-label">Booking Details</label>
-                <input 
-                  className="form-input" 
-                  disabled 
-                  value={`Booking #${data.BookingID} - ${data.Make} ${data.Model}`} 
+                <input
+                  className="form-input"
+                  disabled
+                  value={`Booking #${data.BookingID} - ${data.Make} ${data.Model}`}
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Odometer Start Mileage (km)</label>
-                <input 
-                  type="number" 
-                  required 
-                  className="form-input" 
-                  value={formData.startMileage || 10000} 
-                  onChange={(e) => setFormData({ ...formData, startMileage: parseInt(e.target.value) })} 
+                <input
+                  type="number"
+                  required
+                  className="form-input"
+                  value={formData.startMileage || 10000}
+                  onChange={(e) => setFormData({ ...formData, startMileage: parseInt(e.target.value) })}
                 />
               </div>
             </>
@@ -303,29 +303,29 @@ export default function ActionModal({
             <>
               <div className="form-group">
                 <label className="form-label">Rental</label>
-                <input 
-                  className="form-input" 
-                  disabled 
-                  value={`Rental #${data.RentalID} (${data.Make} ${data.Model})`} 
+                <input
+                  className="form-input"
+                  disabled
+                  value={`Rental #${data.RentalID} (${data.Make} ${data.Model})`}
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Odometer End Mileage (km)</label>
-                <input 
-                  type="number" 
-                  required 
-                  className="form-input" 
-                  value={formData.endMileage || 12000} 
-                  onChange={(e) => setFormData({ ...formData, endMileage: parseInt(e.target.value) })} 
+                <input
+                  type="number"
+                  required
+                  className="form-input"
+                  value={formData.endMileage || 12000}
+                  onChange={(e) => setFormData({ ...formData, endMileage: parseInt(e.target.value) })}
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Damage Assessment Fee (LKR)</label>
-                <input 
-                  type="number" 
-                  className="form-input" 
-                  value={formData.damageCost || 0} 
-                  onChange={(e) => setFormData({ ...formData, damageCost: parseFloat(e.target.value) })} 
+                <input
+                  type="number"
+                  className="form-input"
+                  value={formData.damageCost || 0}
+                  onChange={(e) => setFormData({ ...formData, damageCost: parseFloat(e.target.value) })}
                 />
               </div>
             </>
@@ -336,10 +336,10 @@ export default function ActionModal({
             <>
               <div className="form-group">
                 <label className="form-label">Invoice Details</label>
-                <input 
-                  className="form-input" 
-                  disabled 
-                  value={`Payment #${data.PaymentID} • ${data.FirstName} ${data.LastName} - LKR ${Number(data.Amount).toLocaleString()}`} 
+                <input
+                  className="form-input"
+                  disabled
+                  value={`Payment #${data.PaymentID} • ${data.FirstName} ${data.LastName} - LKR ${Number(data.Amount).toLocaleString()}`}
                 />
               </div>
 
@@ -369,23 +369,23 @@ export default function ActionModal({
 
               <div className="form-group">
                 <label className="form-label">Payment Method</label>
-                <select 
-                  className="form-input" 
-                  value={formData.method || 'Credit Card'} 
+                <select
+                  className="form-input"
+                  value={formData.method || 'Credit Card'}
                   onChange={(e) => setFormData({ ...formData, method: e.target.value })}
                 >
-                  <option value="Credit Card" style={{ background: '#1a1a1a', color: '#ffffff' }}>Credit Card</option>
-                  <option value="Bank Transfer" style={{ background: '#1a1a1a', color: '#ffffff' }}>Bank Transfer</option>
+                  <option value="Credit Card" style={{ background: '#1a1a1a', color: '#ffffff' }}>💳 Credit / Debit Card (Visa / Mastercard)</option>
+                  <option value="Bank Transfer" style={{ background: '#1a1a1a', color: '#ffffff' }}>🏦 Bank Transfer (Direct Deposit)</option>
                 </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Amount Received (LKR)</label>
-                <input 
-                  type="number" 
-                  required 
-                  className="form-input" 
-                  value={formData.amount || data.Amount} 
-                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })} 
+                <input
+                  type="number"
+                  required
+                  className="form-input"
+                  value={formData.amount || data.Amount}
+                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
                 />
               </div>
             </>
@@ -396,9 +396,9 @@ export default function ActionModal({
             <>
               <div className="form-group">
                 <label className="form-label">Vehicle</label>
-                <select 
-                  className="form-input" 
-                  value={formData.vehicleId || 1} 
+                <select
+                  className="form-input"
+                  value={formData.vehicleId || 1}
                   onChange={(e) => setFormData({ ...formData, vehicleId: parseInt(e.target.value) })}
                 >
                   {allVehicles.map((v) => (
@@ -410,9 +410,9 @@ export default function ActionModal({
               </div>
               <div className="form-group">
                 <label className="form-label">Branch</label>
-                <select 
-                  className="form-input" 
-                  value={formData.branchId || 1} 
+                <select
+                  className="form-input"
+                  value={formData.branchId || 1}
                   onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })}
                 >
                   {branches.map((b) => (
@@ -422,21 +422,21 @@ export default function ActionModal({
               </div>
               <div className="form-group">
                 <label className="form-label">Estimated Service Cost (LKR)</label>
-                <input 
-                  type="number" 
-                  required 
-                  className="form-input" 
-                  value={formData.cost || 25000} 
-                  onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) })} 
+                <input
+                  type="number"
+                  required
+                  className="form-input"
+                  value={formData.cost || 25000}
+                  onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) })}
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Service Description</label>
-                <input 
-                  required 
-                  className="form-input" 
-                  value={formData.description || ''} 
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+                <input
+                  required
+                  className="form-input"
+                  value={formData.description || ''}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
             </>
@@ -444,40 +444,75 @@ export default function ActionModal({
 
           {/* UPDATE STATUS FORMS */}
           {type === 'update_vehicle_status' && (
-            <div className="form-group">
-              <label className="form-label">New Vehicle Status</label>
-              <select 
-                className="form-input" 
-                value={formData.status || 'Available'} 
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <option value="Available">Available</option>
-                <option value="Rented">Rented</option>
-                <option value="Maintenance_Required">Maintenance_Required</option>
-                <option value="In_Maintenance">In_Maintenance</option>
-                <option value="Out_Of_Service">Out_Of_Service</option>
-              </select>
-            </div>
+            <>
+              <div className="form-group">
+                <label className="form-label">Vehicle</label>
+                <input
+                  className="form-input"
+                  disabled
+                  value={`Vehicle #${data?.VehicleID} • ${data?.Make || ''} ${data?.Model || ''} (${data?.RegistrationNumber || ''})`}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">New Vehicle Status *</label>
+                <select
+                  className="form-input"
+                  value={formData.status || 'Available'}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="Available">Available</option>
+                  <option value="Rented">Rented</option>
+                  <option value="Maintenance_Required">Maintenance_Required</option>
+                  <option value="In_Maintenance">In_Maintenance</option>
+                  <option value="Out_Of_Service">Out_Of_Service</option>
+                </select>
+              </div>
+            </>
           )}
 
           {type === 'update_maint_status' && (
-            <div className="form-group">
-              <label className="form-label">Maintenance Status</label>
-              <select 
-                className="form-input" 
-                value={formData.status || 'Completed'} 
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <option value="Scheduled">Scheduled</option>
-                <option value="In_Progress">In_Progress</option>
-                <option value="Completed">Completed (Auto-resets car to Available)</option>
-                <option value="Cancelled">Cancelled</option>
-              </select>
-            </div>
+            <>
+              <div className="form-group">
+                <label className="form-label">Maintenance Ticket</label>
+                <input
+                  className="form-input"
+                  disabled
+                  value={`Ticket #${data?.MaintenanceID} • ${data?.RegistrationNumber || ''} (${data?.BranchName || ''})`}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Maintenance Status *</label>
+                <select
+                  className="form-input"
+                  value={formData.status || 'Completed'}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="Scheduled">Scheduled (In Queue)</option>
+                  <option value="In_Progress">In_Progress (Under Service)</option>
+                  <option value="Completed">Completed (Auto-resets Car to Available)</option>
+                  <option value="Cancelled">Cancelled (Aborted)</option>
+                </select>
+              </div>
+
+              {formData.status === 'Completed' && (
+                <div style={{
+                  background: 'rgba(34, 197, 94, 0.08)',
+                  border: '1px solid rgba(34, 197, 94, 0.25)',
+                  borderRadius: '8px',
+                  padding: '0.65rem 0.85rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.82rem',
+                  color: '#4ade80'
+                }}>
+                  ✓ <strong>Trigger ChangeVehToAvailable:</strong> Marking as <em>Completed</em> will automatically restore this vehicle to <strong>Available</strong> status in the fleet.
+                </div>
+              )}
+            </>
           )}
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn-submit"
             disabled={modalLoading || !!dateConflict}
             style={dateConflict ? { opacity: 0.6, cursor: 'not-allowed', background: '#475569', color: '#94a3b8' } : {}}

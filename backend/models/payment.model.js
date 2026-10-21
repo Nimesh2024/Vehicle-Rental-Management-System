@@ -122,6 +122,25 @@ export const PaymentModel = {
             ORDER BY f.FineID DESC
         `);
         return rows;
+    },
+
+    /**
+     * Get detailed receipt for a specific payment ID
+     */
+    async getReceipt(paymentId) {
+        const [rows] = await db.query(`
+            SELECT p.PaymentID, p.RentalID, p.Amount, p.PaymentDate, p.PaymentMethod, p.PaymentStatus,
+                   c.CustomerID, c.FirstName, c.LastName, c.Phone, c.Email,
+                   v.Make, v.Model, v.RegistrationNumber,
+                   IFNULL((SELECT SUM(f.Amount) FROM Fines f WHERE f.RentalID = r.RentalID), 0) AS TotalFines
+            FROM Payments p
+            JOIN Rentals r ON p.RentalID = r.RentalID
+            JOIN Bookings b ON r.BookingID = b.BookingID
+            JOIN Customers c ON b.CustomerID = c.CustomerID
+            JOIN Vehicles v ON b.VehicleID = v.VehicleID
+            WHERE p.PaymentID = ?
+        `, [paymentId]);
+        return rows[0] || null;
     }
 };
 
