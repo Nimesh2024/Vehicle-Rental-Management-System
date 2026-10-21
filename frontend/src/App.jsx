@@ -25,6 +25,7 @@ import CustomersTab from './components/tabs/CustomersTab';
 import BranchesTab from './components/tabs/BranchesTab';
 import AuditLogsTab from './components/tabs/AuditLogsTab';
 import VivaTab from './components/tabs/VivaTab';
+import UsersTab from './components/tabs/UsersTab';
 
 function App() {
   // Authentication State
@@ -64,6 +65,7 @@ function App() {
   const [maintenance, setMaintenance] = useState([]);
   const [branchPerformance, setBranchPerformance] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
 
   // Modals state
@@ -86,7 +88,7 @@ function App() {
     try {
       const [
         statsRes, vehRes, allVehRes, branchRes, catRes, bookRes, rentRes,
-        payOutRes, payAllRes, fineRes, maintRes, branchPerfRes, custRes, auditRes
+        payOutRes, payAllRes, fineRes, maintRes, branchPerfRes, custRes, auditRes, usersRes
       ] = await Promise.all([
         api.fetchDashboardStats().catch(() => ({})),
         api.fetchAvailableVehicles().catch(() => []),
@@ -101,7 +103,8 @@ function App() {
         api.fetchMaintenance().catch(() => []),
         api.fetchBranchPerformance().catch(() => []),
         api.fetchCustomersAll().catch(() => []),
-        api.fetchAuditLogs().catch(() => [])
+        api.fetchAuditLogs().catch(() => []),
+        api.fetchUsersAll().catch(() => [])
       ]);
 
       setStats(statsRes || {});
@@ -117,6 +120,7 @@ function App() {
       setMaintenance(Array.isArray(maintRes) ? maintRes : []);
       setBranchPerformance(Array.isArray(branchPerfRes) ? branchPerfRes : []);
       setCustomers(Array.isArray(custRes) ? custRes : []);
+      setUsers(Array.isArray(usersRes) ? usersRes : []);
       setAuditLogs(Array.isArray(auditRes) ? auditRes : []);
 
       if (currentUser && currentUser.RoleName === 'Customer') {
@@ -207,9 +211,27 @@ function App() {
     showToast("Signed out successfully");
   };
 
-  const fillDemo = (username, password) => {
-    setLoginForm({ username, password });
-    setLoginError('');
+  // User Management Handlers (Admin Exclusive)
+  const handleCreateUser = async (newUserData) => {
+    try {
+      await api.createAdminUser(newUserData);
+      showToast(`User account created: ${newUserData.username}!`);
+      await loadAllData();
+    } catch (err) {
+      showToast(`Error: ${err.message}`);
+      throw err;
+    }
+  };
+
+  const handleUpdateUser = async (userId, updatedData) => {
+    try {
+      await api.updateAdminUser(userId, updatedData);
+      showToast("Profile updated successfully (Username & Password protected).");
+      await loadAllData();
+    } catch (err) {
+      showToast(`Error: ${err.message}`);
+      throw err;
+    }
   };
 
   // Generic Action Modal Handler
@@ -314,7 +336,8 @@ function App() {
           outstandingCount: outstandingPayments.length,
           maintenanceCount: maintenance.length,
           customersCount: customers.length,
-          auditLogsCount: auditLogs.length
+          auditLogsCount: auditLogs.length,
+          usersCount: users.length
         }}
       />
 
@@ -351,6 +374,17 @@ function App() {
               stats={stats} 
               allVehicles={allVehicles} 
               onNavigate={(tab) => setActiveTab(tab)} 
+            />
+          )}
+
+          {/* Tab: User & Staff Administration (Admin Only) */}
+          {activeTab === 'users' && role === 'Admin' && (
+            <UsersTab 
+              users={users}
+              branches={branches}
+              onCreateUser={handleCreateUser}
+              onUpdateUser={handleUpdateUser}
+              loading={loading}
             />
           )}
 
@@ -496,7 +530,6 @@ function App() {
         setRegisterForm={setRegisterForm}
         onLoginSubmit={handleLoginSubmit}
         onRegisterSubmit={handleRegisterSubmit}
-        onFillDemo={fillDemo}
       />
 
       {/* Global Footer */}

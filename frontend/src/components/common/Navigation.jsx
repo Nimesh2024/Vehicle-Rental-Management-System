@@ -15,7 +15,8 @@ export default function Navigation({
     outstandingCount = 0,
     maintenanceCount = 0,
     customersCount = 0,
-    auditLogsCount = 0
+    auditLogsCount = 0,
+    usersCount = 0
   } = counts;
 
   return (
@@ -104,6 +105,12 @@ export default function Navigation({
             onClick={() => setActiveTab('dashboard')}
           >
             <i className="fa-solid fa-chart-pie"></i> Executive KPI
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('users')}
+          >
+            <i className="fa-solid fa-user-shield"></i> User Accounts <span className="tab-badge">{usersCount}</span>
           </button>
           <button 
             className={`tab-btn ${activeTab === 'fleet' ? 'active' : ''}`} 
