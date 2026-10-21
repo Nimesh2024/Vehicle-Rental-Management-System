@@ -10,11 +10,40 @@ export default function ActionModal({
   onSubmit,
   categories = [],
   branches = [],
-  allVehicles = []
+  allVehicles = [],
+  bookings = [],
+  customers = [],
+  currentUser
 }) {
   if (!modalState || !modalState.type) return null;
 
   const { type, data } = modalState;
+
+  // Active bookings for the currently selected vehicle
+  const activeVehicleBookings = React.useMemo(() => {
+    if (type !== 'book_vehicle' || !data?.VehicleID || !bookings) return [];
+    return bookings.filter(b => 
+      Number(b.VehicleID) === Number(data.VehicleID) && 
+      ['Pending', 'Confirmed'].includes(b.Status)
+    );
+  }, [type, data, bookings]);
+
+  // Check if chosen dates collide with any active bookings
+  const dateConflict = React.useMemo(() => {
+    if (type !== 'book_vehicle' || !formData.startDate || !formData.endDate) return null;
+    const reqStart = new Date(formData.startDate);
+    const reqEnd = new Date(formData.endDate);
+    if (isNaN(reqStart.getTime()) || isNaN(reqEnd.getTime())) return null;
+
+    const s1 = formData.startDate;
+    const e1 = formData.endDate;
+
+    return activeVehicleBookings.find(b => {
+      const s2 = new Date(b.StartDate).toISOString().split('T')[0];
+      const e2 = new Date(b.EndDate).toISOString().split('T')[0];
+      return (s1 <= e2 && e1 >= s2);
+    });
+  }, [type, formData.startDate, formData.endDate, activeVehicleBookings]);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -63,21 +92,99 @@ export default function ActionModal({
                   value={`${data.Make} ${data.Model} (${data.RegistrationNumber}) - LKR ${Number(data.DailyRate).toLocaleString()}/day`} 
                 />
               </div>
+
+              {currentUser?.RoleName !== 'Customer' && customers && customers.length > 0 && (
+                <div className="form-group">
+                  <label className="form-label">Customer to Reserve For *</label>
+                  <select 
+                    className="form-input" 
+                    value={formData.customerId || customers[0]?.CustomerID} 
+                    onChange={(e) => setFormData({ ...formData, customerId: parseInt(e.target.value) })}
+                  >
+                    {customers.map((c) => (
+                      <option key={c.CustomerID} value={c.CustomerID}>
+                        {c.FirstName} {c.LastName} ({c.Phone || c.Email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {activeVehicleBookings.length > 0 ? (
+                <div style={{
+                  background: 'rgba(234, 179, 8, 0.08)',
+                  border: '1px solid rgba(234, 179, 8, 0.25)',
+                  borderRadius: '8px',
+                  padding: '0.75rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.825rem'
+                }}>
+                  <div style={{ fontWeight: 600, color: '#facc15', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>🔒</span> Reserved Dates for this Vehicle:
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    {activeVehicleBookings.map((b) => (
+                      <div key={b.BookingID} style={{ color: '#cbd5e1', fontSize: '0.8rem' }}>
+                        • <strong style={{ color: '#f1f5f9' }}>{new Date(b.StartDate).toLocaleDateString()}</strong> to <strong style={{ color: '#f1f5f9' }}>{new Date(b.EndDate).toLocaleDateString()}</strong> 
+                        <span style={{ color: '#eab308', marginLeft: '0.35rem', fontWeight: 600 }}>({b.Status})</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: '0.4rem', color: '#94a3b8', fontSize: '0.75rem' }}>
+                    💡 Please select dates outside these reserved periods, or choose another available vehicle.
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  background: 'rgba(34, 197, 94, 0.08)',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                  borderRadius: '8px',
+                  padding: '0.5rem 0.75rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.8rem',
+                  color: '#4ade80'
+                }}>
+                  ✓ No upcoming bookings for this car. All dates available!
+                </div>
+              )}
+
+              {dateConflict && (
+                <div style={{
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  borderRadius: '8px',
+                  padding: '0.65rem 0.85rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.825rem',
+                  color: '#f87171',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <span>⚠️</span>
+                  <div>
+                    <strong>Date Overlap:</strong> Collides with an existing booking from <strong>{new Date(dateConflict.StartDate).toLocaleDateString()}</strong> to <strong>{new Date(dateConflict.EndDate).toLocaleDateString()}</strong>.
+                  </div>
+                </div>
+              )}
+
               <div className="form-group">
-                <label className="form-label">Start Date</label>
+                <label className="form-label">Start Date *</label>
                 <input 
                   type="date" 
                   required 
+                  min={new Date().toISOString().split('T')[0]}
                   className="form-input" 
                   value={formData.startDate || ''}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} 
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">End Date</label>
+                <label className="form-label">End Date *</label>
                 <input 
                   type="date" 
                   required 
+                  min={formData.startDate || new Date().toISOString().split('T')[0]}
                   className="form-input" 
                   value={formData.endDate || ''}
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} 
@@ -228,13 +335,38 @@ export default function ActionModal({
           {type === 'process_payment' && (
             <>
               <div className="form-group">
-                <label className="form-label">Invoice</label>
+                <label className="form-label">Invoice Details</label>
                 <input 
                   className="form-input" 
                   disabled 
-                  value={`Payment #${data.PaymentID} - LKR ${Number(data.Amount).toLocaleString()}`} 
+                  value={`Payment #${data.PaymentID} • ${data.FirstName} ${data.LastName} - LKR ${Number(data.Amount).toLocaleString()}`} 
                 />
               </div>
+
+              {Number(data.TotalFines) > 0 && (
+                <div style={{
+                  background: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  borderRadius: '8px',
+                  padding: '0.75rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.825rem'
+                }}>
+                  <div style={{ fontWeight: 600, color: '#f87171', marginBottom: '0.35rem' }}>
+                    📋 Consolidated Bill Breakdown (CalculateFinalBill UDF):
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                    • Base Rental Charge: <strong style={{ color: '#f1f5f9' }}>LKR {(Number(data.Amount) - Number(data.TotalFines)).toLocaleString()}</strong>
+                  </div>
+                  <div style={{ color: 'var(--text-muted)' }}>
+                    • Assessed Penalties (Late / Damage): <strong style={{ color: '#f87171' }}>LKR {Number(data.TotalFines).toLocaleString()}</strong>
+                  </div>
+                  <div style={{ marginTop: '0.4rem', borderTop: '1px dashed rgba(255,255,255,0.15)', paddingTop: '0.35rem', color: '#34d399', fontWeight: 700 }}>
+                    Total Amount Due: LKR {Number(data.Amount).toLocaleString()}
+                  </div>
+                </div>
+              )}
+
               <div className="form-group">
                 <label className="form-label">Payment Method</label>
                 <select 
@@ -348,9 +480,10 @@ export default function ActionModal({
           <button 
             type="submit" 
             className="btn-submit"
-            disabled={modalLoading}
+            disabled={modalLoading || !!dateConflict}
+            style={dateConflict ? { opacity: 0.6, cursor: 'not-allowed', background: '#475569', color: '#94a3b8' } : {}}
           >
-            {modalLoading ? 'Executing MySQL Stored Procedure...' : 'Execute Operation (SP)'}
+            {modalLoading ? 'Executing MySQL Stored Procedure...' : dateConflict ? 'Dates Overlap (Select Open Dates)' : 'Execute Operation (SP)'}
           </button>
         </form>
       </div>

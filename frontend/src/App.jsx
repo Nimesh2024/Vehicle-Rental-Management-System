@@ -182,6 +182,8 @@ function App() {
 
     try {
       await api.registerCustomer(registerForm);
+      await loadAllData(); // Refresh customers, users, stats immediately in the UI
+
       const loginData = await api.loginUser({
         username: registerForm.username,
         password: registerForm.password
@@ -192,10 +194,16 @@ function App() {
         localStorage.setItem('vr_user', JSON.stringify(loginData.user));
         setIsLoginOpen(false);
         setAuthPromptMsg('');
+        setRegisterForm({
+          username: '', password: '', firstName: '', lastName: '', nic: '', dob: '1995-05-15', phone: '', email: '', address: ''
+        });
         showToast(`Registration complete! Welcome, ${loginData.user.FullName}!`);
       } else {
         showToast('Account registered! Please sign in.');
         setIsRegisterMode(false);
+        setRegisterForm({
+          username: '', password: '', firstName: '', lastName: '', nic: '', dob: '1995-05-15', phone: '', email: '', address: ''
+        });
       }
     } catch (err) {
       setLoginError(err.message);
@@ -512,6 +520,9 @@ function App() {
         categories={categories}
         branches={branches}
         allVehicles={allVehicles}
+        bookings={bookings}
+        customers={customers}
+        currentUser={currentUser}
       />
 
       {/* Auth Modal (Login & Customer Registration) */}

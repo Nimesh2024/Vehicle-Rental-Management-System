@@ -48,22 +48,19 @@ BEGIN
     DECLARE v_VehicleStatus VARCHAR(50);
     DECLARE v_Conflict INT;
     
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid customer/vehicle or database error.';
-    END;
-
     IF p_StartDate > p_EndDate OR p_StartDate < CURDATE() THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid rental dates.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid rental dates: Start date cannot be in the past, and must be on or before end date.';
     END IF;
 
     START TRANSACTION;
     
     SELECT Status INTO v_VehicleStatus FROM Vehicles WHERE VehicleID = p_VehicleID;
-    IF v_VehicleStatus != 'Available' THEN
+    IF v_VehicleStatus IS NULL THEN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Vehicle unavailable.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Vehicle record not found.';
+    ELSEIF v_VehicleStatus != 'Available' THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Selected vehicle is currently unavailable.';
     END IF;
 
     SELECT COUNT(*) INTO v_Conflict FROM Bookings 
@@ -72,7 +69,7 @@ BEGIN
     
     IF v_Conflict > 0 THEN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Duplicate booking or dates overlap.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Dates overlap: This vehicle already has a confirmed booking during these dates.';
     END IF;
 
     INSERT INTO Bookings (CustomerID, VehicleID, StartDate, EndDate, Status)

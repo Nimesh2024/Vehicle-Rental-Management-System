@@ -20,7 +20,9 @@ export default function PaymentsTab({
               <tr>
                 <th>Payment ID</th>
                 <th>Customer</th>
-                <th>Amount (LKR)</th>
+                <th>Vehicle</th>
+                <th>Rental Status</th>
+                <th>Amount Due (LKR)</th>
                 <th>Invoice Date</th>
                 <th>Actions</th>
               </tr>
@@ -28,29 +30,70 @@ export default function PaymentsTab({
             <tbody>
               {outstandingPayments.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                     No outstanding payments due.
                   </td>
                 </tr>
               ) : (
-                outstandingPayments.map((p) => (
-                  <tr key={p.PaymentID}>
-                    <td>#{p.PaymentID}</td>
-                    <td>{p.FirstName} {p.LastName}</td>
-                    <td style={{ fontWeight: 700, color: '#34d399' }}>
-                      LKR {Number(p.Amount).toLocaleString()}
-                    </td>
-                    <td>{new Date(p.PaymentDate).toLocaleDateString()}</td>
-                    <td>
-                      <button 
-                        className="btn-success btn-sm"
-                        onClick={() => onSettlePayment(p)}
-                      >
-                        💵 Settle Payment (SP)
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                outstandingPayments.map((p) => {
+                  const isReturned = p.RentalStatus === 'Completed';
+                  const isOngoing = p.RentalStatus === 'Ongoing';
+
+                  return (
+                    <tr key={p.PaymentID}>
+                      <td>#{p.PaymentID}</td>
+                      <td>{p.FirstName} {p.LastName}</td>
+                      <td>{p.Make ? `${p.Make} ${p.Model} (${p.RegistrationNumber})` : `Rental #${p.RentalID}`}</td>
+                      <td>
+                        {isOngoing && (
+                          <span className="badge rented" style={{ fontSize: '0.75rem' }}>
+                            🚗 On Road (Pending Return)
+                          </span>
+                        )}
+                        {isReturned && (
+                          <span className="badge available" style={{ fontSize: '0.75rem' }}>
+                            ↩️ Returned (Ready to Settle)
+                          </span>
+                        )}
+                        {!isOngoing && !isReturned && (
+                          <span className="badge pending" style={{ fontSize: '0.75rem' }}>
+                            {p.RentalStatus || 'Pending'}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 700, color: '#34d399' }}>
+                          LKR {Number(p.Amount).toLocaleString()}
+                        </div>
+                        {Number(p.TotalFines) > 0 && (
+                          <div style={{ fontSize: '0.72rem', color: '#f87171' }}>
+                            Includes LKR {Number(p.TotalFines).toLocaleString()} in fines
+                          </div>
+                        )}
+                      </td>
+                      <td>{new Date(p.PaymentDate).toLocaleDateString()}</td>
+                      <td>
+                        {isReturned ? (
+                          <button 
+                            className="btn-success btn-sm"
+                            onClick={() => onSettlePayment(p)}
+                          >
+                            💳 Settle Full Payment (SP)
+                          </button>
+                        ) : (
+                          <button 
+                            className="btn-sm"
+                            disabled
+                            style={{ opacity: 0.6, cursor: 'not-allowed', background: '#334155', color: '#94a3b8' }}
+                            title="Payment is settled upon vehicle return once final mileage and damages are assessed."
+                          >
+                            ⏳ Awaiting Return
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
