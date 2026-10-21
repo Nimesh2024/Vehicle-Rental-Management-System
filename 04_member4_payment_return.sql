@@ -16,9 +16,14 @@ SELECT PaymentMethod, COUNT(PaymentID) AS TotalTransactions, SUM(Amount) AS Tota
 FROM Payments WHERE PaymentStatus = 'Completed' GROUP BY PaymentMethod;
 
 CREATE OR REPLACE VIEW OutstandingPaymentView AS
-SELECT p.PaymentID, c.FirstName, c.LastName, p.Amount, p.PaymentDate
+SELECT p.PaymentID, p.RentalID, c.FirstName, c.LastName, p.Amount, p.PaymentDate,
+       r.RentalStatus, v.Make, v.Model, v.RegistrationNumber,
+       IFNULL((SELECT SUM(f.Amount) FROM Fines f WHERE f.RentalID = r.RentalID), 0) AS TotalFines
 FROM Payments p
-JOIN Rentals r ON p.RentalID = r.RentalID JOIN Bookings b ON r.BookingID = b.BookingID JOIN Customers c ON b.CustomerID = c.CustomerID
+JOIN Rentals r ON p.RentalID = r.RentalID 
+JOIN Bookings b ON r.BookingID = b.BookingID 
+JOIN Customers c ON b.CustomerID = c.CustomerID
+JOIN Vehicles v ON b.VehicleID = v.VehicleID
 WHERE p.PaymentStatus = 'Pending';
 
 CREATE OR REPLACE VIEW CustomerFineView AS
@@ -57,6 +62,7 @@ BEGIN
     DECLARE v_Rate DECIMAL(10,2);
     DECLARE v_LateDays INT;
     DECLARE v_LateFine DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_TotalFine DECIMAL(10,2) DEFAULT 0;
     
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -85,6 +91,14 @@ BEGIN
         INSERT INTO Fines (RentalID, FineType, Amount, Description) VALUES (p_RentalID, 'Damage', p_DamageCost, 'Vehicle Damage charges applied.');
     END IF;
 
+    -- Update pending payment with total fines using CalculateFinalBill UDF
+    SET v_TotalFine = v_LateFine + IFNULL(p_DamageCost, 0);
+    IF v_TotalFine > 0 THEN
+        UPDATE Payments 
+        SET Amount = CalculateFinalBill(Amount, v_TotalFine) 
+        WHERE RentalID = p_RentalID AND PaymentStatus = 'Pending';
+    END IF;
+
     -- Update Rental (Trigger updates vehicle)
     UPDATE Rentals SET ActualEndDate = CURRENT_TIMESTAMP, EndMileage = p_EndMileage, RentalStatus = 'Completed' WHERE RentalID = p_RentalID;
     
@@ -94,6 +108,7 @@ END //
 CREATE PROCEDURE ProcessPayment(IN p_PaymentID INT, IN p_Method VARCHAR(50), IN p_AmountPaid DECIMAL(10,2))
 BEGIN
     DECLARE v_ExpectedAmount DECIMAL(10,2);
+    DECLARE v_RentalID INT;
     DECLARE v_Count INT;
     
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -110,7 +125,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Duplicate payment.';
     END IF;
     
-    SELECT Amount INTO v_ExpectedAmount FROM Payments WHERE PaymentID = p_PaymentID AND PaymentStatus = 'Pending';
+    SELECT Amount, RentalID INTO v_ExpectedAmount, v_RentalID FROM Payments WHERE PaymentID = p_PaymentID AND PaymentStatus = 'Pending';
     
     IF v_ExpectedAmount IS NULL THEN
         ROLLBACK;
@@ -123,6 +138,10 @@ BEGIN
     END IF;
 
     UPDATE Payments SET PaymentStatus = 'Completed', PaymentMethod = p_Method, PaymentDate = CURRENT_TIMESTAMP WHERE PaymentID = p_PaymentID;
+    
+    -- Mark any fines associated with this rental as Paid
+    UPDATE Fines SET Status = 'Paid' WHERE RentalID = v_RentalID;
+
     COMMIT;
 END //
 

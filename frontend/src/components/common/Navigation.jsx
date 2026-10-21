@@ -59,6 +59,12 @@ export default function Navigation({
       {(role === 'Branch Manager' || role === 'Rental Staff') && (
         <>
           <button 
+            className={`tab-btn ${activeTab === 'browse' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('browse')}
+          >
+            <i className="fa-solid fa-car-rear"></i> Browse Fleet
+          </button>
+          <button 
             className={`tab-btn ${activeTab === 'fleet' ? 'active' : ''}`} 
             onClick={() => setActiveTab('fleet')}
           >
@@ -100,6 +106,12 @@ export default function Navigation({
       {/* Admin Tabs */}
       {role === 'Admin' && (
         <>
+          <button 
+            className={`tab-btn ${activeTab === 'browse' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('browse')}
+          >
+            <i className="fa-solid fa-car-rear"></i> Browse Fleet
+          </button>
           <button 
             className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`} 
             onClick={() => setActiveTab('dashboard')}

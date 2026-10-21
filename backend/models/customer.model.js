@@ -26,10 +26,10 @@ export const CustomerModel = {
      * Registers a customer using Stored Procedure RegisterCustomer
      */
     async register({ username, password, roleId = 4, firstName, lastName, nic, dob, phone, email, address }) {
-        return db.execute('CALL RegisterCustomer(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+        return db.query('CALL RegisterCustomer(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             username,
             password || 'password123',
-            roleId,
+            parseInt(roleId, 10) || 4,
             firstName,
             lastName,
             nic,
