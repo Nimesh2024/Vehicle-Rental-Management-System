@@ -64,6 +64,19 @@ export const VehicleController = {
         } catch (err) {
             res.status(500).json({ error: err.sqlMessage || err.message });
         }
+    },
+
+    async addBranch(req, res) {
+        const { branchName, location, contactNumber } = req.body;
+        try {
+            if (!branchName || !location || !contactNumber) {
+                return res.status(400).json({ error: 'Branch name, location, and contact number are required.' });
+            }
+            const branch = await VehicleModel.addBranch({ branchName, location, contactNumber });
+            res.status(201).json({ success: true, message: 'Branch registered successfully!', branch });
+        } catch (err) {
+            res.status(400).json({ error: err.sqlMessage || err.message });
+        }
     }
 };
 

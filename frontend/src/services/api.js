@@ -78,6 +78,15 @@ export async function fetchBranches() {
   return handleResponse(res, 'Failed to fetch branches');
 }
 
+export async function addBranch(branchData) {
+  const res = await fetch(`${API_BASE}/branches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(branchData)
+  });
+  return handleResponse(res, 'Failed to register branch');
+}
+
 export async function fetchCategories() {
   const res = await fetch(`${API_BASE}/categories`);
   return handleResponse(res, 'Failed to fetch categories');

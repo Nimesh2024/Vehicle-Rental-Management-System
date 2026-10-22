@@ -53,6 +53,7 @@ export default function ActionModal({
             <h3 className="modal-title">
               {type === 'book_vehicle' && '⚡ Reserve Vehicle'}
               {type === 'add_vehicle' && '🚗 Register New Vehicle'}
+              {type === 'add_branch' && '🏢 Register New Strategic Branch Hub'}
               {type === 'start_rental' && '🔑 Dispatch Vehicle (Check-Out)'}
               {type === 'return_vehicle' && '↩️ Process Vehicle Return (Check-In)'}
               {type === 'process_payment' && '💳 Settle Outstanding Payment'}
@@ -63,6 +64,7 @@ export default function ActionModal({
             <div className="modal-subtitle">
               {type === 'book_vehicle' && 'Member 3 Stored Procedure: ConfirmBooking()'}
               {type === 'add_vehicle' && 'Member 2 Stored Procedure: AddVehicle() with Transaction'}
+              {type === 'add_branch' && 'Direct insertion into Branches relational table with location and hotline details'}
               {type === 'start_rental' && 'Member 3 Stored Procedure: CreateRental()'}
               {type === 'return_vehicle' && 'Member 4 Stored Procedure: ProcessVehicleReturn() with Late/Damage Fines'}
               {type === 'process_payment' && 'Member 4 Stored Procedure: ProcessPayment()'}
@@ -511,13 +513,65 @@ export default function ActionModal({
             </>
           )}
 
+          {type === 'add_branch' && (
+            <>
+              <div className="form-group">
+                <label className="form-label">Branch Hub Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Kurunegala Express Hub"
+                  className="form-input"
+                  value={formData.branchName || ''}
+                  onChange={(e) => setFormData({ ...formData, branchName: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Full Location / Address *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. No. 102 Colombo Road, Kurunegala"
+                  className="form-input"
+                  value={formData.location || ''}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Contact Hotline / Phone *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. +94372233440"
+                  className="form-input"
+                  value={formData.contactNumber || ''}
+                  onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                />
+              </div>
+
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.08)',
+                border: '1px solid rgba(59, 130, 246, 0.25)',
+                borderRadius: '8px',
+                padding: '0.65rem 0.85rem',
+                marginBottom: '1rem',
+                fontSize: '0.82rem',
+                color: '#60a5fa'
+              }}>
+                ℹ️ Once created, vehicles and staff can be immediately assigned to this branch, and its revenue will be tracked in <strong>BranchPerformanceView</strong>.
+              </div>
+            </>
+          )}
+
           <button
             type="submit"
             className="btn-submit"
             disabled={modalLoading || !!dateConflict}
             style={dateConflict ? { opacity: 0.6, cursor: 'not-allowed', background: '#475569', color: '#94a3b8' } : {}}
           >
-            {modalLoading ? 'Executing MySQL Stored Procedure...' : dateConflict ? 'Dates Overlap (Select Open Dates)' : 'Execute Operation (SP)'}
+            {modalLoading ? 'Executing MySQL Operation...' : dateConflict ? 'Dates Overlap (Select Open Dates)' : type === 'add_branch' ? 'Create Branch Hub' : 'Execute Operation (SP)'}
           </button>
         </form>
       </div>

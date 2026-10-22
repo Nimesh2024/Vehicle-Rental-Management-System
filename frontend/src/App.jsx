@@ -303,6 +303,8 @@ function App() {
         result = await api.updateVehicleStatus(data.VehicleID, formData.status);
       } else if (type === 'update_maint_status') {
         result = await api.updateMaintenanceStatus(data.MaintenanceID, formData.status);
+      } else if (type === 'add_branch') {
+        result = await api.addBranch(formData);
       }
 
       showToast(result?.message || 'Operation executed successfully!');
@@ -541,6 +543,14 @@ function App() {
               branches={branches}
               branchPerformance={branchPerformance}
               role={role}
+              onAddBranch={() => {
+                setFormData({
+                  branchName: '',
+                  location: '',
+                  contactNumber: '+94'
+                });
+                setModalState({ type: 'add_branch', data: null });
+              }}
             />
           )}
 
