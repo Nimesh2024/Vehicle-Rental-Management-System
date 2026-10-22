@@ -54,6 +54,17 @@ export const VehicleModel = {
     },
 
     /**
+     * Adds a new branch hub
+     */
+    async addBranch({ branchName, location, contactNumber }) {
+        const [result] = await db.execute(
+            'INSERT INTO Branches (BranchName, Location, ContactNumber) VALUES (?, ?, ?)',
+            [branchName, location, contactNumber]
+        );
+        return { branchId: result.insertId, branchName, location, contactNumber };
+    },
+
+    /**
      * Get all vehicle categories
      */
     async getCategories() {

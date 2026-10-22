@@ -42,6 +42,7 @@ app.use('/api/dashboard', dashboardRoutes);
 
 // Direct utility endpoints aligned with frontend requests
 app.get('/api/branches', VehicleController.getBranches);
+app.post('/api/branches', VehicleController.addBranch);
 app.get('/api/categories', VehicleController.getCategories);
 app.get('/api/fines', PaymentController.getFines);
 app.get('/api/audit-logs', DashboardController.getAuditLogs);

@@ -3,17 +3,27 @@ import React from 'react';
 export default function BranchesTab({
   branches = [],
   branchPerformance = [],
-  role
+  role,
+  onAddBranch
 }) {
   return (
     <section className="section">
-      <div className="section-header">
+      <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 className="section-title">🏢 Island-Wide Strategic Hubs & Branches ({branches.length} Locations)</h2>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
             Seamless pickup & dropoff across Western, Central, and Southern provinces
           </div>
         </div>
+        {role === 'Admin' && onAddBranch && (
+          <button 
+            className="btn-submit" 
+            style={{ width: 'auto', padding: '0.65rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}
+            onClick={onAddBranch}
+          >
+            <span>+</span> Register New Branch
+          </button>
+        )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '32px' }}>
