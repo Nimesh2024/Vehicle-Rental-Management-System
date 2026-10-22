@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 const VEHICLE_IMAGES = {
   Alto: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=600&q=80',
@@ -39,13 +39,21 @@ export default function BrowseTab({
   onBookVehicle
 }) {
   // Local filter states matching https://aa.rento.lk/rentals
-  const [selectedBranch, setSelectedBranch] = useState('All');
-  const [driverOption, setDriverOption] = useState('0'); // 0: Self Drive, 1: With Driver
+  const isBranchStaff = (currentUser?.RoleName === 'Branch Manager' || currentUser?.RoleName === 'Rental Staff') && currentUser?.BranchName;
+  const [selectedBranch, setSelectedBranch] = useState(() => {
+    return isBranchStaff ? currentUser.BranchName : 'All';
+  });
   const [maxPrice, setMaxPrice] = useState(80000);
   const [sortBy, setSortBy] = useState('default');
   const [isListView, setIsListView] = useState(false);
   const [pickupDate, setPickupDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
+
+  useEffect(() => {
+    if (isBranchStaff && currentUser?.BranchName) {
+      setSelectedBranch(currentUser.BranchName);
+    }
+  }, [currentUser?.UserID, currentUser?.BranchName, isBranchStaff]);
 
   // Filtering & Sorting
   const filteredVehicles = useMemo(() => {
@@ -107,13 +115,17 @@ export default function BrowseTab({
             <span>Rental</span> in Sri Lanka
           </h1>
           <p className="rental-hero-desc">
-            Choose from economy hatchbacks, comfortable sedans, rugged 4x4 SUVs, and spacious passenger vans — Self-drive or with professional chauffeur. Fully maintained, insured, and powered by enterprise ADBMS.
+            Choose from economy hatchbacks, comfortable sedans, rugged 4x4 SUVs, and spacious passenger vans — with professional chauffeur included. Fully maintained, insured, and backed by 24/7 roadside assistance.
           </p>
 
           <div className="hero-badges-row">
             <div className="hero-badge-pill">
               <i className="fa-solid fa-car text-yellow" style={{ color: 'var(--yellow)' }}></i>
               <span>{vehicles.length} Available Vehicles</span>
+            </div>
+            <div className="hero-badge-pill">
+              <i className="fa-solid fa-user-tie text-yellow" style={{ color: 'var(--yellow)' }}></i>
+              <span>Professional Chauffeur Included</span>
             </div>
             <div className="hero-badge-pill">
               <i className="fa-solid fa-building text-yellow" style={{ color: 'var(--yellow)' }}></i>
@@ -125,7 +137,7 @@ export default function BrowseTab({
             </div>
             <div className="hero-badge-pill">
               <i className="fa-solid fa-bolt text-yellow" style={{ color: 'var(--yellow)' }}></i>
-              <span>Instant Stored Procedure Booking</span>
+              <span>Instant Guaranteed Booking</span>
             </div>
           </div>
         </div>
@@ -153,20 +165,6 @@ export default function BrowseTab({
             </select>
           </div>
 
-          {/* Driver Option */}
-          <div className="rsb-group">
-            <div className="rsb-label">
-              <i className="fa-solid fa-id-card"></i> Driver Option
-            </div>
-            <select
-              className="rsb-input"
-              value={driverOption}
-              onChange={(e) => setDriverOption(e.target.value)}
-            >
-              <option value="0">Self Drive</option>
-              <option value="1">With Chauffeur</option>
-            </select>
-          </div>
 
           {/* Pickup Date */}
           <div className="rsb-group">
@@ -289,30 +287,6 @@ export default function BrowseTab({
 
           <hr className="filter-divider" />
 
-          {/* Driver Option */}
-          <div className="filter-group">
-            <div className="filter-label">Driver Option</div>
-            <label className="filter-option">
-              <input
-                type="radio"
-                name="sidebar-driver"
-                checked={driverOption === '0'}
-                onChange={() => setDriverOption('0')}
-              />
-              <span>Self Drive</span>
-            </label>
-            <label className="filter-option">
-              <input
-                type="radio"
-                name="sidebar-driver"
-                checked={driverOption === '1'}
-                onChange={() => setDriverOption('1')}
-              />
-              <span>With Chauffeur</span>
-            </label>
-          </div>
-
-          <hr className="filter-divider" />
 
           {/* Price Range Slider */}
           <div className="filter-group">
@@ -429,11 +403,14 @@ export default function BrowseTab({
             ) : (
               filteredVehicles.map((v) => {
                 const imgUrl = getVehicleImg(v.Make, v.Model);
+                const isAvail = v.Status === 'Available';
                 return (
                   <div key={v.VehicleID} className="rc">
                     <div className="rc-img">
                       <img src={imgUrl} alt={`${v.Make} ${v.Model}`} loading="lazy" />
-                      <div className="rc-badge">{v.Status || 'Available'}</div>
+                      <div className={`rc-badge ${isAvail ? 'available' : 'rented'}`} style={!isAvail ? { background: 'rgba(239, 68, 68, 0.85)', color: '#fff' } : {}}>
+                        {isAvail ? '✓ Available' : v.Status === 'Rented' ? '🔒 Currently Rented' : v.Status === 'In_Maintenance' ? '🛠️ In Maintenance' : '⚠️ Unavailable'}
+                      </div>
                       <div className="rc-rating">
                         <i className="fa-solid fa-star"></i>
                         <span>4.9</span>
@@ -450,16 +427,16 @@ export default function BrowseTab({
 
                       <div className="rc-tags">
                         <span className="rc-tag">
+                          <i className="fa-solid fa-user-tie"></i>
+                          Chauffeur Included
+                        </span>
+                        <span className="rc-tag">
                           <i className="fa-solid fa-shield-halved"></i>
                           Insurance Included
                         </span>
                         <span className="rc-tag">
                           <i className="fa-solid fa-road"></i>
                           Unlimited Km
-                        </span>
-                        <span className="rc-tag">
-                          <i className="fa-solid fa-id-card"></i>
-                          {v.RegistrationNumber}
                         </span>
                         <span className="rc-tag">
                           <i className="fa-solid fa-gear"></i>
@@ -478,18 +455,34 @@ export default function BrowseTab({
                           </div>
                         </div>
 
-                        <button
-                          className="rc-btn"
-                          onClick={() => {
-                            if (!currentUser) {
-                              onRequireAuth(`Please sign in or create an account to reserve the ${v.Make} ${v.Model}!`);
-                            } else {
-                              onBookVehicle(v);
-                            }
-                          }}
-                        >
-                          Book Now
-                        </button>
+                        {isAvail ? (
+                          <button
+                            className="rc-btn"
+                            onClick={() => {
+                              if (!currentUser) {
+                                onRequireAuth(`Please sign in or create an account to reserve the ${v.Make} ${v.Model}!`);
+                              } else {
+                                onBookVehicle(v);
+                              }
+                            }}
+                          >
+                            Book Now
+                          </button>
+                        ) : (
+                          <button
+                            className="rc-btn"
+                            disabled
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              color: '#94a3b8',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              cursor: 'not-allowed',
+                              boxShadow: 'none'
+                            }}
+                          >
+                            {v.Status === 'Rented' ? 'Currently Rented' : v.Status === 'In_Maintenance' ? 'In Maintenance' : 'Unavailable'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

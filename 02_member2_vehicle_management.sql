@@ -1,8 +1,5 @@
 USE VehicleRentalDB;
 
--- ==========================================
--- MEMBER 2: Vehicle Management
--- ==========================================
 
 -- 1. INDEXES
 CREATE INDEX idx_veh_reg ON Vehicles(RegistrationNumber);
@@ -11,9 +8,10 @@ CREATE INDEX idx_veh_status ON Vehicles(Status);
 
 -- 2. VIEWS
 CREATE OR REPLACE VIEW AvailableVehiclesView AS
-SELECT v.VehicleID, v.RegistrationNumber, v.Make, v.Model, c.CategoryName, c.DailyRate, v.Status
+SELECT v.VehicleID, v.RegistrationNumber, v.Make, v.Model, c.CategoryName, c.DailyRate, v.Status, v.BranchID, b.BranchName
 FROM Vehicles v
 JOIN VehicleCategories c ON v.CategoryID = c.CategoryID
+JOIN Branches b ON v.BranchID = b.BranchID
 WHERE v.Status = 'Available';
 
 CREATE OR REPLACE VIEW BranchVehicleView AS

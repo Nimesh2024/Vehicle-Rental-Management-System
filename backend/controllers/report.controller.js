@@ -27,6 +27,17 @@ export const ReportController = {
         } catch (err) {
             res.status(500).json({ error: err.sqlMessage || err.message });
         }
+    },
+
+    async getExecutiveAnalytics(req, res) {
+        try {
+            const { period, date, month, year } = req.query;
+            const data = await ReportModel.getExecutiveAnalytics({ period, date, month, year });
+            res.json(data);
+        } catch (err) {
+            console.error('Error fetching executive analytics:', err);
+            res.status(500).json({ error: err.sqlMessage || err.message });
+        }
     }
 };
 

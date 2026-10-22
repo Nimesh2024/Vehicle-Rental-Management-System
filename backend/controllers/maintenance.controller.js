@@ -3,7 +3,8 @@ import MaintenanceModel from '../models/maintenance.model.js';
 export const MaintenanceController = {
     async getAll(req, res) {
         try {
-            const rows = await MaintenanceModel.getAll();
+            const branchId = req.query.branchId ? parseInt(req.query.branchId, 10) : null;
+            const rows = await MaintenanceModel.getAll(branchId);
             res.json(rows);
         } catch (err) {
             res.status(500).json({ error: err.sqlMessage || err.message });

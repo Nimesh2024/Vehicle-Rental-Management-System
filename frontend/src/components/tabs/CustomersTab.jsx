@@ -18,9 +18,9 @@ export default function CustomersTab({
     <section className="section">
       <div className="section-header">
         <div>
-          <h2 className="section-title">👥 Customer Directory (ActiveCustomerView & UDFs)</h2>
+          <h2 className="section-title">👥 Customer Directory & Accounts</h2>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Includes CustomerAge() and CustomerRentalCount() UDF calculations
+            Verified customer profiles, rental histories, and identity records
           </div>
         </div>
         <div className="search-bar-box">
@@ -41,8 +41,8 @@ export default function CustomersTab({
               <th>ID</th>
               <th>Name</th>
               <th>NIC / Passport</th>
-              <th>Age (UDF)</th>
-              <th>Rentals (UDF)</th>
+              <th>Age</th>
+              <th>Total Rentals</th>
               <th>Phone & Email</th>
               <th>Status</th>
             </tr>

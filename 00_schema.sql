@@ -1,9 +1,6 @@
 CREATE DATABASE IF NOT EXISTS VehicleRentalDB;
 USE VehicleRentalDB;
 
--- ==========================================
--- MAIN SCHEMA (15 Normalized Tables)
--- ==========================================
 
 CREATE TABLE Roles (
     RoleID INT AUTO_INCREMENT PRIMARY KEY,
@@ -47,6 +44,8 @@ CREATE TABLE Employees (
     FirstName VARCHAR(50) NOT NULL,
     LastName VARCHAR(50) NOT NULL,
     HireDate DATE NOT NULL,
+    Phone VARCHAR(20),
+    Email VARCHAR(100),
     FOREIGN KEY (UserID) REFERENCES Users(UserID),
     FOREIGN KEY (BranchID) REFERENCES Branches(BranchID)
 );
@@ -99,6 +98,9 @@ CREATE TABLE Bookings (
     StartDate DATE NOT NULL,
     EndDate DATE NOT NULL,
     Status ENUM('Pending', 'Confirmed', 'Cancelled', 'Completed') DEFAULT 'Pending',
+    DepositAmount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    DepositStatus VARCHAR(20) NOT NULL DEFAULT 'Paid',
+    DepositPaymentMethod VARCHAR(50) NOT NULL DEFAULT 'Credit Card',
     CHECK (EndDate >= StartDate),
     FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
     FOREIGN KEY (VehicleID) REFERENCES Vehicles(VehicleID)

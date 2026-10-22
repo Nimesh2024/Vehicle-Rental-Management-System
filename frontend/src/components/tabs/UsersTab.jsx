@@ -5,14 +5,17 @@ export default function UsersTab({
   branches = [],
   onCreateUser,
   onUpdateUser,
+  onDeleteUser,
+  currentUserId,
   loading = false
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('ALL');
   
-  // Modal states for Create and Edit
+  // Modal states for Create, Edit, and Delete
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [deletingUser, setDeletingUser] = useState(null);
 
   // Filter users by search and role
   const filteredUsers = users.filter((u) => {
@@ -223,14 +226,26 @@ export default function UsersTab({
                       </span>
                     </td>
                     <td>
-                      <button 
-                        type="button" 
-                        className="btn-action-edit"
-                        onClick={() => setEditingUser(u)}
-                        title="Edit profile details (Username/Password remain immutable)"
-                      >
-                        <i className="fa-solid fa-pen-to-square"></i> Edit
-                      </button>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <button 
+                          type="button" 
+                          className="btn-action-edit"
+                          onClick={() => setEditingUser(u)}
+                          title="Edit profile details (Username/Password remain immutable)"
+                        >
+                          <i className="fa-solid fa-pen-to-square"></i> Edit
+                        </button>
+                        {u.UserID !== 1 && u.UserID !== currentUserId && (
+                          <button 
+                            type="button" 
+                            className="btn-action-delete"
+                            onClick={() => setDeletingUser(u)}
+                            title="Permanently remove user account and cascade relational data"
+                          >
+                            <i className="fa-solid fa-trash-can"></i> Remove
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -257,10 +272,28 @@ export default function UsersTab({
         <EditUserModal 
           user={editingUser}
           branches={branches}
+          currentUserId={currentUserId}
           onClose={() => setEditingUser(null)}
+          onOpenDelete={() => {
+            const target = editingUser;
+            setEditingUser(null);
+            setDeletingUser(target);
+          }}
           onSubmit={async (updatedData) => {
             await onUpdateUser(editingUser.UserID, updatedData);
             setEditingUser(null);
+          }}
+        />
+      )}
+
+      {/* CONFIRM PERMANENT USER DELETION MODAL */}
+      {deletingUser && (
+        <ConfirmDeleteModal 
+          user={deletingUser}
+          onClose={() => setDeletingUser(null)}
+          onConfirm={async () => {
+            await onDeleteUser(deletingUser.UserID);
+            setDeletingUser(null);
           }}
         />
       )}
@@ -302,6 +335,10 @@ function CreateUserModal({ branches = [], onClose, onSubmit }) {
       setError('First name is required.');
       return;
     }
+    if (!phone.trim()) {
+      setError('Phone number is required.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -311,7 +348,7 @@ function CreateUserModal({ branches = [], onClose, onSubmit }) {
         roleId,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        branchId: (roleId === 2 || roleId === 3) ? parseInt(branchId, 10) : null,
+        branchId: (roleId === 1 || roleId === 2 || roleId === 3) ? parseInt(branchId, 10) : null,
         nic: nic.trim(),
         dob,
         phone: phone.trim(),
@@ -330,9 +367,9 @@ function CreateUserModal({ branches = [], onClose, onSubmit }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
         <div className="modal-header">
           <div>
-            <h3 className="modal-title">✨ Create User or Manager Account</h3>
+            <h3 className="modal-title">✨ Create User Account</h3>
             <div className="modal-subtitle">
-              Provision administrative credentials for Branch Managers, Staff, or Customers
+              Provision administrative credentials for Managers, Staff, Customers, or Admins
             </div>
           </div>
           <button className="modal-close" onClick={onClose}>✕</button>
@@ -354,21 +391,28 @@ function CreateUserModal({ branches = [], onClose, onSubmit }) {
                 className={`role-pill-btn ${roleId === 2 ? 'active manager' : ''}`}
                 onClick={() => setRoleId(2)}
               >
-                🏢 Branch Manager
+                🏢 Manager
               </button>
               <button 
                 type="button" 
                 className={`role-pill-btn ${roleId === 3 ? 'active staff' : ''}`}
                 onClick={() => setRoleId(3)}
               >
-                👔 Rental Staff
+                👔 Staff
               </button>
               <button 
                 type="button" 
                 className={`role-pill-btn ${roleId === 4 ? 'active customer' : ''}`}
                 onClick={() => setRoleId(4)}
               >
-                👤 Normal User (Customer)
+                👤 Customer
+              </button>
+              <button 
+                type="button" 
+                className={`role-pill-btn ${roleId === 1 ? 'active admin' : ''}`}
+                onClick={() => setRoleId(1)}
+              >
+                👑 Admin
               </button>
             </div>
           </div>
@@ -421,10 +465,37 @@ function CreateUserModal({ branches = [], onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* Branch Assignment for Managers and Staff */}
-          {(roleId === 2 || roleId === 3) && (
+          {/* Contact Details (Universal for ALL Roles) */}
+          <div className="form-grid-2">
             <div className="form-group">
-              <label className="form-label">Assigned Branch Hub *</label>
+              <label className="form-label">Phone Number *</label>
+              <input 
+                type="tel"
+                className="form-input" 
+                placeholder="+94 77 123 4567" 
+                required 
+                value={phone} 
+                onChange={(e) => setPhone(e.target.value)} 
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input 
+                type="email" 
+                className="form-input" 
+                placeholder="name@rento.lk" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+              />
+            </div>
+          </div>
+
+          {/* Branch Assignment for Managers, Staff, and Admins */}
+          {(roleId === 1 || roleId === 2 || roleId === 3) && (
+            <div className="form-group">
+              <label className="form-label">
+                Assigned Branch Hub {roleId === 1 ? '(HQ Operational Center)' : '*'}
+              </label>
               <select 
                 className="form-input" 
                 value={branchId} 
@@ -464,30 +535,8 @@ function CreateUserModal({ branches = [], onClose, onSubmit }) {
                   />
                 </div>
               </div>
-              <div className="form-grid-2">
-                <div className="form-group">
-                  <label className="form-label">Phone Number *</label>
-                  <input 
-                    className="form-input" 
-                    placeholder="+94 77 123 4567" 
-                    required 
-                    value={phone} 
-                    onChange={(e) => setPhone(e.target.value)} 
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Email Address</label>
-                  <input 
-                    type="email" 
-                    className="form-input" 
-                    placeholder="name@rento.lk" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                  />
-                </div>
-              </div>
               <div className="form-group">
-                <label className="form-label">Address</label>
+                <label className="form-label">Residential Address</label>
                 <input 
                   className="form-input" 
                   placeholder="Street, City" 
@@ -502,9 +551,9 @@ function CreateUserModal({ branches = [], onClose, onSubmit }) {
             type="submit" 
             className="btn-submit" 
             disabled={isSubmitting} 
-            style={{ marginTop: '12px' }}
+            style={{ marginTop: '14px' }}
           >
-            {isSubmitting ? 'Creating User Account...' : `Confirm & Create ${roleId === 2 ? 'Manager' : roleId === 3 ? 'Staff' : 'Customer'} →`}
+            {isSubmitting ? 'Creating User Account...' : `Confirm & Create ${roleId === 1 ? 'Admin' : roleId === 2 ? 'Manager' : roleId === 3 ? 'Staff' : 'Customer'} →`}
           </button>
         </form>
       </div>
@@ -515,7 +564,7 @@ function CreateUserModal({ branches = [], onClose, onSubmit }) {
 // -------------------------------------------------------------
 // MODAL: EDIT USER (USERNAME & PASSWORD ARE STRICTLY IMMUTABLE)
 // -------------------------------------------------------------
-function EditUserModal({ user, branches = [], onClose, onSubmit }) {
+function EditUserModal({ user, branches = [], currentUserId, onClose, onOpenDelete, onSubmit }) {
   const [firstName, setFirstName] = useState(user.FirstName || '');
   const [lastName, setLastName] = useState(user.LastName || '');
   const [branchId, setBranchId] = useState(user.BranchID || branches[0]?.BranchID || 1);
@@ -523,11 +572,14 @@ function EditUserModal({ user, branches = [], onClose, onSubmit }) {
   const [email, setEmail] = useState(user.Email !== '-' ? user.Email : '');
   const [address, setAddress] = useState(user.Address !== '-' ? user.Address : '');
   const [status, setStatus] = useState(user.AccountStatus || 'Active');
+  const [nic, setNic] = useState(user.NIC_Passport || '');
+  const [dob, setDob] = useState(user.DOB ? user.DOB.split('T')[0] : '');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEmployee = user.RoleName === 'Branch Manager' || user.RoleName === 'Rental Staff';
   const isCustomer = user.RoleName === 'Customer';
+  const isAdmin = user.RoleName === 'Admin';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -538,10 +590,12 @@ function EditUserModal({ user, branches = [], onClose, onSubmit }) {
       await onSubmit({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        branchId: isEmployee ? parseInt(branchId, 10) : null,
+        branchId: isEmployee || isAdmin ? parseInt(branchId, 10) : null,
         phone: phone.trim(),
         email: email.trim(),
         address: address.trim(),
+        nic: isCustomer ? nic.trim() : undefined,
+        dob: isCustomer && dob ? dob : undefined,
         status
       });
     } catch (err) {
@@ -553,12 +607,12 @@ function EditUserModal({ user, branches = [], onClose, onSubmit }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
         <div className="modal-header">
           <div>
             <h3 className="modal-title">✏️ Edit Profile: {user.FullName || user.Username}</h3>
             <div className="modal-subtitle">
-              Update personal details, branch assignments, and status.
+              Role: <strong>{user.RoleName}</strong> • UserID #{user.UserID}
             </div>
           </div>
           <button className="modal-close" onClick={onClose}>✕</button>
@@ -571,11 +625,11 @@ function EditUserModal({ user, branches = [], onClose, onSubmit }) {
               <i className="fa-solid fa-lock"></i> Username: <strong>{user.Username}</strong> (Immutable)
             </span>
             <span className="locked-badge">
-              <i className="fa-solid fa-key"></i> Password: <strong>••••••••</strong> (Protected)
+              <i className="fa-solid fa-shield"></i> Role: <strong>{user.RoleName}</strong> (Fixed)
             </span>
           </div>
           <p className="locked-desc">
-            Per system policy, usernames and passwords cannot be edited from this interface to preserve transactional integrity.
+            Per system policy, usernames and system roles cannot be altered from this editor to preserve transactional integrity and audit logs.
           </p>
         </div>
 
@@ -589,7 +643,7 @@ function EditUserModal({ user, branches = [], onClose, onSubmit }) {
           {/* Name Fields */}
           <div className="form-grid-2">
             <div className="form-group">
-              <label className="form-label">First Name</label>
+              <label className="form-label">First Name *</label>
               <input 
                 className="form-input" 
                 value={firstName} 
@@ -607,10 +661,12 @@ function EditUserModal({ user, branches = [], onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* Branch for Staff/Managers */}
-          {isEmployee && (
+          {/* Branch for Staff/Managers/Admin */}
+          {(isEmployee || isAdmin) && (
             <div className="form-group">
-              <label className="form-label">Assigned Branch Hub</label>
+              <label className="form-label">
+                Assigned Branch Hub {isAdmin && '(System Admin Default)'}
+              </label>
               <select 
                 className="form-input" 
                 value={branchId} 
@@ -646,30 +702,55 @@ function EditUserModal({ user, branches = [], onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* Address & Status for Customers */}
+          {/* Customer Specific Fields (NIC & DOB) */}
           {isCustomer && (
-            <>
+            <div className="form-grid-2">
               <div className="form-group">
-                <label className="form-label">Residential Address</label>
+                <label className="form-label">NIC / Passport</label>
                 <input 
                   className="form-input" 
-                  value={address} 
-                  onChange={(e) => setAddress(e.target.value)} 
+                  value={nic} 
+                  onChange={(e) => setNic(e.target.value)} 
+                  placeholder="e.g. 199012345678"
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Account Status</label>
-                <select 
+                <label className="form-label">Date of Birth</label>
+                <input 
+                  type="date"
                   className="form-input" 
-                  value={status} 
-                  onChange={(e) => setStatus(e.target.value)}
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="Blacklisted">Blacklisted</option>
-                </select>
+                  value={dob} 
+                  onChange={(e) => setDob(e.target.value)} 
+                />
               </div>
-            </>
+            </div>
+          )}
+
+          {/* Address */}
+          <div className="form-group">
+            <label className="form-label">Address</label>
+            <input 
+              className="form-input" 
+              value={address} 
+              onChange={(e) => setAddress(e.target.value)} 
+              placeholder="Street, City"
+            />
+          </div>
+
+          {/* Status for Customers */}
+          {isCustomer && (
+            <div className="form-group">
+              <label className="form-label">Account Status</label>
+              <select 
+                className="form-input" 
+                value={status} 
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Blacklisted">Blacklisted</option>
+              </select>
+            </div>
           )}
 
           <button 
@@ -680,7 +761,179 @@ function EditUserModal({ user, branches = [], onClose, onSubmit }) {
           >
             {isSubmitting ? 'Saving Changes...' : 'Save Profile Changes →'}
           </button>
+
+          {/* DANGER ZONE (ADMIN REMOVAL) */}
+          {user.UserID !== 1 && user.UserID !== currentUserId && onOpenDelete && (
+            <div style={{
+              marginTop: '22px',
+              paddingTop: '16px',
+              borderTop: '1px solid rgba(239, 68, 68, 0.25)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}>
+              <div>
+                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#f87171' }}>
+                  <i className="fa-solid fa-triangle-exclamation"></i> Danger Zone
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  Permanently erase account and cascade dependent records
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-danger-outline"
+                onClick={onOpenDelete}
+              >
+                <i className="fa-solid fa-trash-can"></i> Remove Account
+              </button>
+            </div>
+          )}
         </form>
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// MODAL: CONFIRM PERMANENT USER DELETION
+// -------------------------------------------------------------
+function ConfirmDeleteModal({ user, onClose, onConfirm }) {
+  const [error, setError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setError('');
+    setIsDeleting(true);
+    try {
+      await onConfirm();
+    } catch (err) {
+      setError(err.message || 'Failed to remove user account.');
+      setIsDeleting(false);
+    }
+  };
+
+  const isCustomer = user.RoleName === 'Customer';
+  const isEmployee = user.RoleName === 'Branch Manager' || user.RoleName === 'Rental Staff';
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div 
+        className="modal-content" 
+        onClick={(e) => e.stopPropagation()} 
+        style={{ maxWidth: '520px', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+      >
+        <div className="modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              borderRadius: '10px', 
+              background: 'rgba(239, 68, 68, 0.15)', 
+              color: '#ef4444', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              fontSize: '18px'
+            }}>
+              <i className="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+              <h3 className="modal-title" style={{ color: '#f87171' }}>Permanently Remove User</h3>
+              <div className="modal-subtitle">Super Admin Relational Cascade Protocol</div>
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose} disabled={isDeleting}>✕</button>
+        </div>
+
+        {error && (
+          <div className="alert-error" style={{ marginBottom: '14px', borderLeft: '4px solid #ef4444' }}>
+            <span>⚠️ {error}</span>
+          </div>
+        )}
+
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.03)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '16px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ fontWeight: '800', fontSize: '1.05rem', color: '#fff' }}>
+              {user.FullName || `${user.FirstName || ''} ${user.LastName || ''}`.trim() || user.Username}
+            </div>
+            <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171' }}>
+              UserID #{user.UserID}
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '0.85rem', color: 'var(--text-gray)' }}>
+            <div>Username: <strong style={{ color: '#fff' }}>{user.Username}</strong></div>
+            <div>Role: <strong style={{ color: 'var(--yellow)' }}>{user.RoleName}</strong></div>
+            <div>Branch: <strong style={{ color: '#fff' }}>{user.BranchName || 'Online / All'}</strong></div>
+            <div>Phone: <strong style={{ color: '#fff' }}>{user.Phone || 'N/A'}</strong></div>
+          </div>
+        </div>
+
+        <div style={{ 
+          background: 'rgba(239, 68, 68, 0.06)', 
+          border: '1px solid rgba(239, 68, 68, 0.2)', 
+          borderRadius: '10px', 
+          padding: '12px 14px', 
+          marginBottom: '20px',
+          fontSize: '0.83rem',
+          lineHeight: '1.45',
+          color: 'var(--text-gray)'
+        }}>
+          <div style={{ fontWeight: '700', color: '#fca5a5', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <i className="fa-solid fa-database"></i> Database Cascading Rules:
+          </div>
+          <ul style={{ margin: 0, paddingLeft: '18px' }}>
+            {isCustomer && (
+              <>
+                <li>Associated Customer profile, booking logs, payments, and fines will be purged.</li>
+                <li><strong>Safety check:</strong> Any ongoing active vehicle rentals will prevent deletion.</li>
+              </>
+            )}
+            {isEmployee && (
+              <li>Employee records, branch assignments, and system credentials will be permanently dropped.</li>
+            )}
+            {!isCustomer && !isEmployee && (
+              <li>Admin privileges, credentials, and profile records will be permanently removed.</li>
+            )}
+            <li>An immutable deletion audit entry will be logged under Administrator actions.</li>
+          </ul>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <button 
+            type="button" 
+            className="btn-secondary" 
+            onClick={onClose} 
+            disabled={isDeleting}
+            style={{ padding: '10px 18px', borderRadius: '10px', fontWeight: 600 }}
+          >
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            className="btn-danger-confirm" 
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <i className="fa-solid fa-spinner fa-spin"></i> Deleting User...
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-trash-can"></i> Permanently Delete User
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

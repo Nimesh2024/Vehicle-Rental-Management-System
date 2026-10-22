@@ -1,8 +1,5 @@
 USE VehicleRentalDB;
 
--- ==========================================
--- MEMBER 1: Customer & User Management
--- ==========================================
 
 -- 1. INDEXES
 CREATE INDEX idx_customer_phone ON Customers(Phone);

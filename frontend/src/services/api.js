@@ -60,6 +60,36 @@ export async function updateAdminUser(userId, userData) {
   return handleResponse(res, 'Failed to update user profile');
 }
 
+export async function deleteAdminUser(userId) {
+  const res = await fetch(`${API_BASE}/auth/users/${userId}`, {
+    method: 'DELETE'
+  });
+  return handleResponse(res, 'Failed to remove user account');
+}
+
+export async function fetchUserProfile(userId) {
+  const res = await fetch(`${API_BASE}/auth/profile/${userId}`);
+  return handleResponse(res, 'Failed to load user profile');
+}
+
+export async function updateUserProfile(userId, profileData) {
+  const res = await fetch(`${API_BASE}/auth/profile/${userId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(profileData)
+  });
+  return handleResponse(res, 'Failed to update your profile');
+}
+
+export async function changeUserPassword(userId, passwordData) {
+  const res = await fetch(`${API_BASE}/auth/change-password/${userId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(passwordData)
+  });
+  return handleResponse(res, 'Failed to update password');
+}
+
 // ==========================================
 // 2. VEHICLES & FLEET
 // ==========================================
@@ -227,6 +257,12 @@ export async function fetchBranchPerformance() {
 export async function fetchMaintenanceCost() {
   const res = await fetch(`${API_BASE}/reports/maintenance-cost`);
   return handleResponse(res, 'Failed to fetch maintenance cost');
+}
+
+export async function fetchExecutiveAnalytics(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  const res = await fetch(`${API_BASE}/reports/executive-analytics${query ? `?${query}` : ''}`);
+  return handleResponse(res, 'Failed to fetch executive analytics');
 }
 
 // ==========================================

@@ -25,8 +25,8 @@ import MaintenanceTab from './components/tabs/MaintenanceTab';
 import CustomersTab from './components/tabs/CustomersTab';
 import BranchesTab from './components/tabs/BranchesTab';
 import AuditLogsTab from './components/tabs/AuditLogsTab';
-import VivaTab from './components/tabs/VivaTab';
 import UsersTab from './components/tabs/UsersTab';
+import ProfileTab from './components/tabs/ProfileTab';
 
 function App() {
   // Authentication State
@@ -77,9 +77,6 @@ function App() {
 
   // Receipt Modal state
   const [receiptData, setReceiptData] = useState(null);
-
-  // Viva Simulation State
-  const [trapResult, setTrapResult] = useState(null);
 
   // Toast Helper
   const showToast = useCallback((message) => {
@@ -246,6 +243,17 @@ function App() {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    try {
+      const res = await api.deleteAdminUser(userId);
+      showToast(res.message || "User account permanently removed.");
+      await loadAllData();
+    } catch (err) {
+      showToast(`Error: ${err.message}`);
+      throw err;
+    }
+  };
+
   // Generic Action Modal Handler
   const handleActionSubmit = async (e) => {
     e.preventDefault();
@@ -316,38 +324,47 @@ function App() {
     }
   };
 
-  // Run Error Trap Simulation
-  const runErrorSimulation = async (type) => {
-    setTrapResult({ status: 'running', message: 'Sending invalid payload to MySQL Stored Procedure...' });
-    try {
-      const res = await api.executeErrorSimulation(type);
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setTrapResult({
-          status: 'trapped',
-          type,
-          error: data.error,
-          sqlState: '45000 (Custom Trap)',
-          action: 'ACID Transaction ROLLED BACK successfully by EXIT HANDLER.'
-        });
-      } else {
-        setTrapResult({ status: 'unexpected_success', data });
-      }
-    } catch (err) {
-      setTrapResult({ status: 'error', error: err.message });
-    }
-  };
-
   if (loading) {
     return (
       <div className="dashboard" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <h2 className="title">Connecting to Enterprise ADBMS Platform...</h2>
+        <h2 className="title">Connecting to Rento Platform...</h2>
       </div>
     );
   }
 
   const role = currentUser?.RoleName;
+  const isBranchStaff = (role === 'Branch Manager' || role === 'Rental Staff') && currentUser?.BranchID != null;
+  const userBranchId = currentUser?.BranchID != null ? Number(currentUser.BranchID) : null;
+  const userBranchName = currentUser?.BranchName || '';
+
+  // Scoped datasets for Branch Manager & Rental Staff
+  const displayVehicles = isBranchStaff
+    ? allVehicles.filter((v) => Number(v.BranchID) === userBranchId || (userBranchName && v.BranchName === userBranchName))
+    : allVehicles;
+
+  const displayBookings = isBranchStaff
+    ? bookings.filter((b) => Number(b.BranchID) === userBranchId || (userBranchName && b.BranchName === userBranchName))
+    : bookings;
+
+  const displayRentals = isBranchStaff
+    ? activeRentals.filter((r) => Number(r.BranchID) === userBranchId || (userBranchName && r.BranchName === userBranchName))
+    : activeRentals;
+
+  const displayOutstanding = isBranchStaff
+    ? outstandingPayments.filter((p) => Number(p.BranchID) === userBranchId || (userBranchName && p.BranchName === userBranchName))
+    : outstandingPayments;
+
+  const displayPayments = isBranchStaff
+    ? payments.filter((p) => Number(p.BranchID) === userBranchId || (userBranchName && p.BranchName === userBranchName))
+    : payments;
+
+  const displayFines = isBranchStaff
+    ? fines.filter((f) => Number(f.BranchID) === userBranchId || (userBranchName && f.BranchName === userBranchName))
+    : fines;
+
+  const displayMaintenance = isBranchStaff
+    ? maintenance.filter((m) => Number(m.BranchID) === userBranchId || (userBranchName && m.BranchName === userBranchName))
+    : maintenance;
 
   return (
     <div className="dashboard">
@@ -364,6 +381,7 @@ function App() {
           setLoginError('');
         }}
         onLogout={handleLogout}
+        onOpenProfile={() => setActiveTab('profile')}
       />
 
       {/* Dynamic Navigation Tabs */}
@@ -373,11 +391,11 @@ function App() {
         setActiveTab={setActiveTab}
         counts={{
           myBookingsCount: myBookings.length,
-          allVehiclesCount: allVehicles.length,
-          bookingsCount: bookings.length,
-          rentalsCount: activeRentals.length,
-          outstandingCount: outstandingPayments.length,
-          maintenanceCount: maintenance.length,
+          allVehiclesCount: displayVehicles.length,
+          bookingsCount: displayBookings.length,
+          rentalsCount: displayRentals.length,
+          outstandingCount: displayOutstanding.length,
+          maintenanceCount: displayMaintenance.length,
           customersCount: customers.length,
           auditLogsCount: auditLogs.length,
           usersCount: users.length
@@ -416,7 +434,9 @@ function App() {
             <DashboardTab 
               stats={stats} 
               allVehicles={allVehicles} 
+              currentUser={currentUser}
               onNavigate={(tab) => setActiveTab(tab)} 
+              showToast={showToast}
             />
           )}
 
@@ -427,6 +447,8 @@ function App() {
               branches={branches}
               onCreateUser={handleCreateUser}
               onUpdateUser={handleUpdateUser}
+              onDeleteUser={handleDeleteUser}
+              currentUserId={currentUser?.UserID}
               loading={loading}
             />
           )}
@@ -434,12 +456,14 @@ function App() {
           {/* Tab: Fleet Inventory */}
           {activeTab === 'fleet' && (
             <FleetTab 
-              allVehicles={allVehicles}
+              allVehicles={displayVehicles}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               role={role}
+              currentUser={currentUser}
               onAddVehicle={() => {
-                setFormData({ categoryId: 1, branchId: 1, make: '', model: '', year: 2024, registration: '', purchaseDate: '' });
+                const defaultBranch = isBranchStaff ? userBranchId : 1;
+                setFormData({ categoryId: 1, branchId: defaultBranch, make: '', model: '', year: 2024, registration: '', purchaseDate: '' });
                 setModalState({ type: 'add_vehicle', data: null });
               }}
               onUpdateStatus={(v) => {
@@ -453,7 +477,7 @@ function App() {
           {(activeTab === 'bookings' || activeTab === 'my_bookings') && (
             <BookingsTab 
               isMyBookings={activeTab === 'my_bookings'}
-              bookings={activeTab === 'my_bookings' ? myBookings : bookings}
+              bookings={activeTab === 'my_bookings' ? myBookings : displayBookings}
               currentUser={currentUser}
               role={role}
               onStartRental={(b) => {
@@ -466,8 +490,9 @@ function App() {
           {/* Tab: Active Ongoing Rentals */}
           {activeTab === 'rentals' && (
             <RentalsTab 
-              activeRentals={activeRentals}
+              activeRentals={displayRentals}
               role={role}
+              currentUser={currentUser}
               onReturnVehicle={(r) => {
                 setFormData({ rentalId: r.RentalID, endMileage: (r.StartMileage || 0) + 150, damageCost: 0 });
                 setModalState({ type: 'return_vehicle', data: r });
@@ -479,27 +504,25 @@ function App() {
           {(activeTab === 'payments' || activeTab === 'my_invoices') && (
             <PaymentsTab 
               isMyInvoices={activeTab === 'my_invoices'}
-              outstandingPayments={outstandingPayments}
-              allPayments={payments}
-              fines={fines}
+              outstandingPayments={displayOutstanding}
+              allPayments={displayPayments}
+              fines={displayFines}
+              currentUser={currentUser}
               onSettlePayment={(p) => {
                 setFormData({ paymentId: p.PaymentID, method: 'Credit Card', amount: p.Amount });
                 setModalState({ type: 'process_payment', data: p });
               }}
-              onViewReceipt={(p) => {
-                const baseAmount = Number(p.Amount) - Number(p.TotalFines || 0);
-                setReceiptData({
-                  paymentId: p.PaymentID,
-                  rentalId: p.RentalID,
-                  customerName: `${p.FirstName || ''} ${p.LastName || ''}`.trim() || 'Customer',
-                  vehicle: p.Make ? `${p.Make} ${p.Model} (${p.RegistrationNumber})` : 'Vehicle Rental',
-                  amount: p.Amount,
-                  baseAmount: baseAmount > 0 ? baseAmount : p.Amount,
-                  totalFines: Number(p.TotalFines || 0),
-                  method: p.PaymentMethod || 'Credit Card',
-                  date: new Date(p.PaymentDate).toLocaleString(),
-                  transactionRef: `TXN-${p.PaymentID}`
-                });
+              onViewReceipt={async (p) => {
+                try {
+                  const fullReceipt = await api.fetchPaymentReceipt(p.PaymentID);
+                  if (fullReceipt) {
+                    setReceiptData(fullReceipt);
+                    return;
+                  }
+                } catch (err) {
+                  console.error('Failed to fetch full receipt:', err);
+                }
+                setReceiptData(p);
               }}
             />
           )}
@@ -507,12 +530,16 @@ function App() {
           {/* Tab: Vehicle Maintenance */}
           {activeTab === 'maintenance' && (
             <MaintenanceTab 
-              maintenance={maintenance}
+              maintenance={displayMaintenance}
               role={role}
+              currentUser={currentUser}
               onScheduleMaintenance={() => {
+                const defaultBranch = isBranchStaff ? userBranchId : 1;
+                const branchVehs = isBranchStaff ? displayVehicles : allVehicles;
+                const defaultVehicleId = branchVehs[0]?.VehicleID || 1;
                 setFormData({
-                  vehicleId: 1,
-                  branchId: 1,
+                  vehicleId: defaultVehicleId,
+                  branchId: defaultBranch,
                   serviceDate: new Date().toISOString().split('T')[0],
                   cost: 25000,
                   description: 'Periodic Oil & Brake Service'
@@ -541,6 +568,7 @@ function App() {
               branches={branches}
               branchPerformance={branchPerformance}
               role={role}
+              currentUser={currentUser}
             />
           )}
 
@@ -549,11 +577,17 @@ function App() {
             <AuditLogsTab auditLogs={auditLogs} />
           )}
 
-          {/* Tab: ADBMS Viva Concept Demonstrator */}
-          {activeTab === 'viva' && (
-            <VivaTab 
-              trapResult={trapResult}
-              onRunSimulation={runErrorSimulation}
+          {/* Tab: User Profile & Account Settings (All User Types) */}
+          {activeTab === 'profile' && currentUser && (
+            <ProfileTab 
+              currentUser={currentUser}
+              onUpdateCurrentUser={(updated) => {
+                setCurrentUser(updated);
+                localStorage.setItem('vr_user', JSON.stringify(updated));
+              }}
+              branches={branches}
+              onNavigate={(tab) => setActiveTab(tab)}
+              showToast={showToast}
             />
           )}
         </div>
@@ -570,8 +604,8 @@ function App() {
         onSubmit={handleActionSubmit}
         categories={categories}
         branches={branches}
-        allVehicles={allVehicles}
-        bookings={bookings}
+        allVehicles={displayVehicles}
+        bookings={displayBookings}
         customers={customers}
         currentUser={currentUser}
       />

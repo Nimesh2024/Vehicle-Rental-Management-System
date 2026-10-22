@@ -5,9 +5,9 @@ export default function AuditLogsTab({ auditLogs = [] }) {
     <section className="section">
       <div className="section-header">
         <div>
-          <h2 className="section-title">🛡️ System Trigger Audit Logs (AuditLogs Table)</h2>
+          <h2 className="section-title">🛡️ System Activity & Security Audit Logs</h2>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Live feed generated automatically by database triggers across all 5 member tables
+            Real-time immutable security audit trail recording system events and administrative mutations
           </div>
         </div>
       </div>
