@@ -354,8 +354,7 @@ export default function BrowseTab({
                 placeholder="Search make or model..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="rental-select"
-                style={{ width: '180px' }}
+                className="rental-select rental-search-input"
               />
 
               {/* Sort By */}
@@ -407,7 +406,14 @@ export default function BrowseTab({
                 return (
                   <div key={v.VehicleID} className="rc">
                     <div className="rc-img">
-                      <img src={imgUrl} alt={`${v.Make} ${v.Model}`} loading="lazy" />
+                      <img
+                        src={imgUrl}
+                        alt={`${v.Make} ${v.Model}`}
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80';
+                        }}
+                      />
                       <div className={`rc-badge ${isAvail ? 'available' : 'rented'}`} style={!isAvail ? { background: 'rgba(239, 68, 68, 0.85)', color: '#fff' } : {}}>
                         {isAvail ? '✓ Available' : v.Status === 'Rented' ? '🔒 Currently Rented' : v.Status === 'In_Maintenance' ? '🛠️ In Maintenance' : '⚠️ Unavailable'}
                       </div>

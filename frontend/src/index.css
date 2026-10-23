@@ -352,9 +352,10 @@ select,
 .rental-search-wrap {
   position: relative;
   z-index: 100;
-  max-width: 1240px;
+  max-width: 1840px;
+  width: 100%;
   margin: -48px auto 0;
-  padding: 0 24px;
+  padding: 0 36px;
 }
 
 .rental-search-bar {
@@ -441,12 +442,13 @@ select,
    LISTING BODY & SIDEBAR (2-COLUMN RENTO LAYOUT)
    ======================================================== */
 .rental-body {
-  max-width: 1240px;
-  margin: 50px auto 90px;
-  padding: 0 24px;
+  max-width: 1840px;
+  width: 100%;
+  margin: 40px auto 90px;
+  padding: 0 36px;
   display: grid;
-  grid-template-columns: 270px 1fr;
-  gap: 36px;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
   align-items: start;
 }
 
@@ -458,6 +460,23 @@ select,
   padding: 24px 20px;
   position: sticky;
   top: 90px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.rental-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.rental-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rental-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
 }
 
 .sidebar-title {
@@ -492,9 +511,16 @@ select,
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  margin-bottom: 4px;
   cursor: pointer;
   user-select: none;
+  transition: all 0.2s ease;
+}
+
+.filter-option:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .filter-option input[type="radio"],
@@ -503,6 +529,7 @@ select,
   height: 16px;
   accent-color: var(--yellow);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .filter-option label,
@@ -511,6 +538,7 @@ select,
   color: var(--text-gray);
   cursor: pointer;
   transition: color 0.2s;
+  white-space: nowrap;
 }
 
 .filter-option:hover label,
@@ -587,6 +615,20 @@ input[type="range"] {
   cursor: pointer;
   color-scheme: dark;
   outline: none;
+  transition: border-color 0.2s, background 0.2s, width 0.3s;
+}
+
+.rental-select:focus {
+  border-color: var(--yellow);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rental-search-input {
+  width: 220px;
+}
+
+.rental-search-input:focus {
+  width: 280px;
 }
 
 .view-toggles {
@@ -618,8 +660,15 @@ input[type="range"] {
 /* Grid & List View */
 .rental-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
+}
+
+@media (min-width: 1600px) {
+  .rental-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 26px;
+  }
 }
 
 .rental-grid.list-view {
@@ -632,8 +681,9 @@ input[type="range"] {
 }
 
 .rental-grid.list-view .rc-img {
-  width: 280px;
+  width: 320px;
   flex-shrink: 0;
+  min-height: 200px;
   aspect-ratio: unset;
 }
 
@@ -783,6 +833,7 @@ input[type="range"] {
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
+  gap: 12px;
 }
 
 .rc-price-wrap {
@@ -802,6 +853,7 @@ input[type="range"] {
   font-weight: 900;
   color: #fff;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .rc-price sub {
@@ -823,6 +875,8 @@ input[type="range"] {
   letter-spacing: 1px;
   cursor: pointer;
   transition: all 0.3s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .rc-btn:hover {
@@ -1915,10 +1969,18 @@ select.form-input option:checked {
 @media (max-width: 1024px) {
   .rental-body {
     grid-template-columns: 1fr;
+    padding: 0 24px;
+    margin: 30px auto 60px;
+  }
+
+  .rental-search-wrap {
+    padding: 0 24px;
   }
 
   .rental-sidebar {
     position: static;
+    max-height: none;
+    overflow-y: visible;
   }
 }
 
@@ -1929,6 +1991,17 @@ select.form-input option:checked {
 
   .tabs-nav {
     padding: 10px 20px;
+  }
+
+  .rental-body {
+    padding: 0 16px;
+    gap: 20px;
+    margin: 24px auto 50px;
+  }
+
+  .rental-search-wrap {
+    padding: 0 16px;
+    margin-top: -24px;
   }
 
   .rental-search-bar {
@@ -1944,6 +2017,15 @@ select.form-input option:checked {
   .rsb-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .rental-grid.list-view .rc {
+    flex-direction: column;
+  }
+
+  .rental-grid.list-view .rc-img {
+    width: 100%;
+    aspect-ratio: 16/10;
   }
 }
 
