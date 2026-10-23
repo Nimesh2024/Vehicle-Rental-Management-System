@@ -3,7 +3,8 @@ import RentalModel from '../models/rental.model.js';
 export const RentalController = {
     async getActive(req, res) {
         try {
-            const rows = await RentalModel.getActiveRentals();
+            const branchId = req.query.branchId ? parseInt(req.query.branchId, 10) : null;
+            const rows = await RentalModel.getActiveRentals(branchId);
             res.json(rows);
         } catch (err) {
             res.status(500).json({ error: err.sqlMessage || err.message });

@@ -16,14 +16,15 @@ SELECT PaymentMethod, COUNT(PaymentID) AS TotalTransactions, SUM(Amount) AS Tota
 FROM Payments WHERE PaymentStatus = 'Completed' GROUP BY PaymentMethod;
 
 CREATE OR REPLACE VIEW OutstandingPaymentView AS
-SELECT p.PaymentID, p.RentalID, c.FirstName, c.LastName, p.Amount, p.PaymentDate,
-       r.RentalStatus, v.Make, v.Model, v.RegistrationNumber,
+SELECT p.PaymentID, p.RentalID, c.CustomerID, c.FirstName, c.LastName, p.Amount, p.PaymentDate,
+       r.RentalStatus, v.Make, v.Model, v.RegistrationNumber, v.BranchID, br.BranchName,
        IFNULL((SELECT SUM(f.Amount) FROM Fines f WHERE f.RentalID = r.RentalID), 0) AS TotalFines
 FROM Payments p
 JOIN Rentals r ON p.RentalID = r.RentalID 
 JOIN Bookings b ON r.BookingID = b.BookingID 
 JOIN Customers c ON b.CustomerID = c.CustomerID
 JOIN Vehicles v ON b.VehicleID = v.VehicleID
+JOIN Branches br ON v.BranchID = br.BranchID
 WHERE p.PaymentStatus = 'Pending';
 
 CREATE OR REPLACE VIEW CustomerFineView AS

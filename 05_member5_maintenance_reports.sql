@@ -1,8 +1,5 @@
 USE VehicleRentalDB;
 
--- ==========================================
--- MEMBER 5: Maintenance, Branch & Reporting
--- ==========================================
 
 -- 1. INDEXES
 CREATE INDEX idx_maint_vehicle ON Maintenance(VehicleID);
@@ -12,7 +9,7 @@ CREATE INDEX idx_maint_status ON Maintenance(MaintenanceStatus);
 
 -- 2. VIEWS
 CREATE OR REPLACE VIEW VehicleMaintenanceView AS
-SELECT m.MaintenanceID, v.RegistrationNumber, b.BranchName, m.ServiceDate, m.Cost, m.MaintenanceStatus
+SELECT m.MaintenanceID, m.VehicleID, m.BranchID, v.RegistrationNumber, v.Make, v.Model, b.BranchName, m.ServiceDate, m.Cost, m.Description, m.MaintenanceStatus
 FROM Maintenance m
 JOIN Vehicles v ON m.VehicleID = v.VehicleID
 JOIN Branches b ON m.BranchID = b.BranchID;

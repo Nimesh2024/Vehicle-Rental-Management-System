@@ -3,7 +3,9 @@ import PaymentModel from '../models/payment.model.js';
 export const PaymentController = {
     async getOutstanding(req, res) {
         try {
-            const rows = await PaymentModel.getOutstanding();
+            const customerId = req.query.customerId ? parseInt(req.query.customerId, 10) : null;
+            const branchId = req.query.branchId ? parseInt(req.query.branchId, 10) : null;
+            const rows = await PaymentModel.getOutstanding(customerId, branchId);
             res.json(rows);
         } catch (err) {
             res.status(500).json({ error: err.sqlMessage || err.message });
@@ -12,7 +14,9 @@ export const PaymentController = {
 
     async getAll(req, res) {
         try {
-            const rows = await PaymentModel.getAll();
+            const customerId = req.query.customerId ? parseInt(req.query.customerId, 10) : null;
+            const branchId = req.query.branchId ? parseInt(req.query.branchId, 10) : null;
+            const rows = await PaymentModel.getAll(customerId, branchId);
             res.json(rows);
         } catch (err) {
             res.status(500).json({ error: err.sqlMessage || err.message });
@@ -50,7 +54,9 @@ export const PaymentController = {
 
     async getFines(req, res) {
         try {
-            const rows = await PaymentModel.getAllFines();
+            const customerId = req.query.customerId ? parseInt(req.query.customerId, 10) : null;
+            const branchId = req.query.branchId ? parseInt(req.query.branchId, 10) : null;
+            const rows = await PaymentModel.getAllFines(customerId, branchId);
             res.json(rows);
         } catch (err) {
             res.status(500).json({ error: err.sqlMessage || err.message });

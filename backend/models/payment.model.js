@@ -4,24 +4,53 @@ export const PaymentModel = {
     /**
      * Get outstanding pending payments via OutstandingPaymentView
      */
-    async getOutstanding() {
-        const [rows] = await db.query('SELECT * FROM OutstandingPaymentView');
+    async getOutstanding(customerId = null, branchId = null) {
+        let sql = 'SELECT * FROM OutstandingPaymentView';
+        const conditions = [];
+        const params = [];
+        if (customerId) {
+            conditions.push('CustomerID = ?');
+            params.push(customerId);
+        }
+        if (branchId) {
+            conditions.push('BranchID = ?');
+            params.push(branchId);
+        }
+        if (conditions.length > 0) {
+            sql += ' WHERE ' + conditions.join(' AND ');
+        }
+        const [rows] = await db.query(sql, params);
         return rows;
     },
 
     /**
      * Get all payment transaction logs
      */
-    async getAll() {
-        const [rows] = await db.query(`
-            SELECT p.*, c.FirstName, c.LastName, v.Make, v.Model, v.RegistrationNumber
+    async getAll(customerId = null, branchId = null) {
+        let sql = `
+            SELECT p.*, c.CustomerID, c.FirstName, c.LastName, v.Make, v.Model, v.RegistrationNumber, v.BranchID, br.BranchName
             FROM Payments p
             JOIN Rentals r ON p.RentalID = r.RentalID
             JOIN Bookings b ON r.BookingID = b.BookingID
             JOIN Customers c ON b.CustomerID = c.CustomerID
             JOIN Vehicles v ON b.VehicleID = v.VehicleID
-            ORDER BY p.PaymentID DESC
-        `);
+            LEFT JOIN Branches br ON v.BranchID = br.BranchID
+        `;
+        const conditions = [];
+        const params = [];
+        if (customerId) {
+            conditions.push('c.CustomerID = ?');
+            params.push(customerId);
+        }
+        if (branchId) {
+            conditions.push('v.BranchID = ?');
+            params.push(branchId);
+        }
+        if (conditions.length > 0) {
+            sql += ' WHERE ' + conditions.join(' AND ');
+        }
+        sql += ' ORDER BY p.PaymentID DESC';
+        const [rows] = await db.query(sql, params);
         return rows;
     },
 
@@ -110,17 +139,32 @@ export const PaymentModel = {
     /**
      * Get all fine records with customer and vehicle details
      */
-    async getAllFines() {
-        const [rows] = await db.query(`
+    async getAllFines(customerId = null, branchId = null) {
+        let sql = `
             SELECT f.FineID, f.RentalID, f.FineType, f.Amount, f.Description, f.Status,
-                   c.CustomerID, c.FirstName, c.LastName, v.RegistrationNumber
+                   c.CustomerID, c.FirstName, c.LastName, v.RegistrationNumber, v.BranchID, br.BranchName
             FROM Fines f
             JOIN Rentals r ON f.RentalID = r.RentalID
             JOIN Bookings b ON r.BookingID = b.BookingID
             JOIN Customers c ON b.CustomerID = c.CustomerID
             JOIN Vehicles v ON b.VehicleID = v.VehicleID
-            ORDER BY f.FineID DESC
-        `);
+            LEFT JOIN Branches br ON v.BranchID = br.BranchID
+        `;
+        const conditions = [];
+        const params = [];
+        if (customerId) {
+            conditions.push('c.CustomerID = ?');
+            params.push(customerId);
+        }
+        if (branchId) {
+            conditions.push('v.BranchID = ?');
+            params.push(branchId);
+        }
+        if (conditions.length > 0) {
+            sql += ' WHERE ' + conditions.join(' AND ');
+        }
+        sql += ' ORDER BY f.FineID DESC';
+        const [rows] = await db.query(sql, params);
         return rows;
     },
 
@@ -129,18 +173,35 @@ export const PaymentModel = {
      */
     async getReceipt(paymentId) {
         const [rows] = await db.query(`
-            SELECT p.PaymentID, p.RentalID, p.Amount, p.PaymentDate, p.PaymentMethod, p.PaymentStatus,
-                   c.CustomerID, c.FirstName, c.LastName, c.Phone, c.Email,
-                   v.Make, v.Model, v.RegistrationNumber,
+            SELECT p.PaymentID, p.RentalID, p.Amount AS TotalAmount, p.Amount, p.PaymentDate, p.PaymentMethod, p.PaymentStatus,
+                   c.CustomerID, c.FirstName, c.LastName, c.NIC_Passport, c.Phone, c.Email,
+                   v.VehicleID, v.Make, v.Model, v.Year AS VehicleYear, v.RegistrationNumber,
+                   cat.CategoryName, cat.DailyRate,
+                   b.BookingID, b.StartDate, b.EndDate,
+                   GREATEST(DATEDIFF(b.EndDate, b.StartDate), 1) AS RentalDays,
+                   (GREATEST(DATEDIFF(b.EndDate, b.StartDate), 1) * cat.DailyRate) AS RentalCharge,
+                   r.StartMileage, r.EndMileage,
+                   CONCAT('REC-', LPAD(p.PaymentID, 5, '0')) AS receiptNo,
                    IFNULL((SELECT SUM(f.Amount) FROM Fines f WHERE f.RentalID = r.RentalID), 0) AS TotalFines
             FROM Payments p
             JOIN Rentals r ON p.RentalID = r.RentalID
             JOIN Bookings b ON r.BookingID = b.BookingID
             JOIN Customers c ON b.CustomerID = c.CustomerID
             JOIN Vehicles v ON b.VehicleID = v.VehicleID
+            JOIN VehicleCategories cat ON v.CategoryID = cat.CategoryID
             WHERE p.PaymentID = ?
         `, [paymentId]);
-        return rows[0] || null;
+
+        const receipt = rows[0] || null;
+        if (receipt) {
+            const [fines] = await db.query(
+                `SELECT FineID, FineType, Amount, Description, Status FROM Fines WHERE RentalID = ?`,
+                [receipt.RentalID]
+            );
+            receipt.fines = fines;
+            receipt.fineTotal = fines.reduce((sum, f) => sum + Number(f.Amount || 0), 0);
+        }
+        return receipt;
     }
 };
 

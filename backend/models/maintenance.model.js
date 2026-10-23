@@ -4,8 +4,15 @@ export const MaintenanceModel = {
     /**
      * Get maintenance records via VehicleMaintenanceView
      */
-    async getAll() {
-        const [rows] = await db.query('SELECT * FROM VehicleMaintenanceView ORDER BY MaintenanceID DESC');
+    async getAll(branchId = null) {
+        let sql = 'SELECT * FROM VehicleMaintenanceView';
+        const params = [];
+        if (branchId) {
+            sql += ' WHERE BranchID = ?';
+            params.push(branchId);
+        }
+        sql += ' ORDER BY MaintenanceID DESC';
+        const [rows] = await db.query(sql, params);
         return rows;
     },
 

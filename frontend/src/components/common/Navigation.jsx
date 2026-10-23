@@ -44,6 +44,12 @@ export default function Navigation({
               >
                 <i className="fa-solid fa-file-invoice-dollar"></i> Invoices & Fines
               </button>
+              <button 
+                className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`} 
+                onClick={() => setActiveTab('profile')}
+              >
+                <i className="fa-solid fa-id-badge"></i> My Profile
+              </button>
             </>
           )}
           <button 
@@ -99,6 +105,12 @@ export default function Navigation({
             onClick={() => setActiveTab('customers')}
           >
             <i className="fa-solid fa-users"></i> Customers <span className="tab-badge">{customersCount}</span>
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('profile')}
+          >
+            <i className="fa-solid fa-id-badge"></i> My Profile
           </button>
         </>
       )}
@@ -172,22 +184,14 @@ export default function Navigation({
           >
             <i className="fa-solid fa-shield-halved"></i> Audit Logs <span className="tab-badge">{auditLogsCount}</span>
           </button>
+          <button 
+            className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('profile')}
+          >
+            <i className="fa-solid fa-id-badge"></i> My Profile
+          </button>
         </>
       )}
-
-      {/* Viva Special Tab (Always Visible for Evaluators) */}
-      <button 
-        className={`tab-btn ${activeTab === 'viva' ? 'active' : ''}`} 
-        onClick={() => setActiveTab('viva')}
-        style={{ 
-          marginLeft: 'auto', 
-          background: activeTab === 'viva' ? 'var(--yellow)' : 'rgba(245, 197, 24, 0.12)', 
-          color: activeTab === 'viva' ? '#000' : 'var(--yellow)',
-          border: '1px solid var(--border-gold)'
-        }}
-      >
-        <i className="fa-solid fa-flask-vial"></i> ADBMS Viva Hub
-      </button>
     </nav>
   );
 }

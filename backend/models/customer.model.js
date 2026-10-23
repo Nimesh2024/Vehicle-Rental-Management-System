@@ -58,10 +58,12 @@ export const CustomerModel = {
     async getBookings(customerId) {
         const [rows] = await db.query(`
             SELECT b.BookingID, b.StartDate, b.EndDate, b.Status, b.BookingDate,
-                   v.Make, v.Model, v.RegistrationNumber, cat.DailyRate
+                   b.DepositAmount, b.DepositStatus, b.DepositPaymentMethod,
+                   v.Make, v.Model, v.RegistrationNumber, cat.DailyRate, v.BranchID, br.BranchName
             FROM Bookings b
             JOIN Vehicles v ON b.VehicleID = v.VehicleID
             JOIN VehicleCategories cat ON v.CategoryID = cat.CategoryID
+            LEFT JOIN Branches br ON v.BranchID = br.BranchID
             WHERE b.CustomerID = ?
             ORDER BY b.BookingID DESC
         `, [customerId]);

@@ -42,15 +42,22 @@ DELIMITER ;
 -- 4. STORED PROCEDURES
 DELIMITER //
 CREATE PROCEDURE ConfirmBooking(
-    IN p_CustomerID INT, IN p_VehicleID INT, IN p_StartDate DATE, IN p_EndDate DATE
+    IN p_CustomerID INT, 
+    IN p_VehicleID INT, 
+    IN p_StartDate DATE, 
+    IN p_EndDate DATE,
+    IN p_DepositAmount DECIMAL(10,2)
 )
 BEGIN
     DECLARE v_VehicleStatus VARCHAR(50);
     DECLARE v_Conflict INT;
+    DECLARE v_ActualDeposit DECIMAL(10,2);
     
     IF p_StartDate > p_EndDate OR p_StartDate < CURDATE() THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid rental dates: Start date cannot be in the past, and must be on or before end date.';
     END IF;
+
+    SET v_ActualDeposit = IFNULL(p_DepositAmount, 25000.00);
 
     START TRANSACTION;
     
@@ -72,8 +79,8 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Dates overlap: This vehicle already has a confirmed booking during these dates.';
     END IF;
 
-    INSERT INTO Bookings (CustomerID, VehicleID, StartDate, EndDate, Status)
-    VALUES (p_CustomerID, p_VehicleID, p_StartDate, p_EndDate, 'Confirmed');
+    INSERT INTO Bookings (CustomerID, VehicleID, StartDate, EndDate, Status, DepositAmount, DepositStatus, DepositPaymentMethod)
+    VALUES (p_CustomerID, p_VehicleID, p_StartDate, p_EndDate, 'Confirmed', v_ActualDeposit, 'Paid', 'Credit Card');
     
     COMMIT;
 END //
