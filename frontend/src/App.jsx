@@ -621,9 +621,12 @@ function App() {
         </div>
       ) : (
         <>
-          {/* Main Header */}
+          {/* Main Header with Primary Nav Bar */}
           <Header
             currentUser={currentUser}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            counts={counts}
             onOpenLogin={() => {
               setIsLoginOpen(true);
               setIsRegisterMode(false);
@@ -634,13 +637,15 @@ function App() {
             onOpenProfile={() => setActiveTab('profile')}
           />
 
-          {/* Dynamic Navigation Tabs */}
-          <Navigation
-            currentUser={currentUser}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            counts={counts}
-          />
+          {/* Sub Navigation Tabs for Logged In Operational Roles */}
+          {currentUser && (
+            <Navigation
+              currentUser={currentUser}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              counts={counts}
+            />
+          )}
 
           {renderTabContent()}
         </>

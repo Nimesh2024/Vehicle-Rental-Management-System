@@ -1,9 +1,22 @@
 import React from 'react';
 
-export default function Header({ currentUser, onOpenLogin, onLogout, onOpenProfile }) {
+export default function Header({ 
+  currentUser, 
+  activeTab = 'browse', 
+  setActiveTab, 
+  onOpenLogin, 
+  onLogout, 
+  onOpenProfile,
+  counts = {}
+}) {
   return (
     <header className="header">
-      <div className="brand-box">
+      <div 
+        className="brand-box"
+        onClick={() => setActiveTab && setActiveTab('browse')}
+        role="button"
+        tabIndex={0}
+      >
         <div className="brand-logo-badge">
           <i className="fa-solid fa-car-side"></i>
           <span>RENTO</span>
@@ -19,6 +32,51 @@ export default function Header({ currentUser, onOpenLogin, onLogout, onOpenProfi
           </div>
         </div>
       </div>
+
+      {/* Primary Top Nav Bar */}
+      <nav className="header-nav-bar" aria-label="Main Navigation">
+        <button 
+          className={`nav-pill-btn ${activeTab === 'browse' ? 'active-pill' : 'ghost-pill'}`}
+          onClick={() => setActiveTab && setActiveTab('browse')}
+          type="button"
+          title="Browse available vehicle fleet"
+        >
+          <i className="fa-solid fa-car"></i>
+          <span>Browse Fleet</span>
+        </button>
+
+        <button 
+          className={`nav-pill-btn ${activeTab === 'branches' ? 'active-pill' : 'ghost-pill'}`}
+          onClick={() => setActiveTab && setActiveTab('branches')}
+          type="button"
+          title="View rental branches & operational hubs"
+        >
+          <i className="fa-solid fa-location-dot nav-pin-icon"></i>
+          <span>Branches & Hubs</span>
+        </button>
+
+        {currentUser && currentUser.RoleName === 'Customer' && (
+          <>
+            <button 
+              className={`nav-pill-btn ${activeTab === 'my_bookings' ? 'active-pill' : 'ghost-pill'}`}
+              onClick={() => setActiveTab && setActiveTab('my_bookings')}
+              type="button"
+            >
+              <i className="fa-solid fa-calendar-check"></i>
+              <span>My Bookings</span>
+              {counts.myBookingsCount > 0 && <span className="nav-tab-badge">{counts.myBookingsCount}</span>}
+            </button>
+            <button 
+              className={`nav-pill-btn ${activeTab === 'my_invoices' ? 'active-pill' : 'ghost-pill'}`}
+              onClick={() => setActiveTab && setActiveTab('my_invoices')}
+              type="button"
+            >
+              <i className="fa-solid fa-file-invoice-dollar"></i>
+              <span>Invoices</span>
+            </button>
+          </>
+        )}
+      </nav>
 
       <div className="header-actions">
         {currentUser ? (
