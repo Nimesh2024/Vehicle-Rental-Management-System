@@ -8,6 +8,8 @@ import * as api from './services/api';
 import Header from './components/common/Header';
 import Navigation from './components/common/Navigation';
 import Toast from './components/common/Toast';
+import AdminSidePanel from './components/common/AdminSidePanel';
+import AdminTopBar from './components/common/AdminTopBar';
 
 // Modals
 import AuthModal from './components/modals/AuthModal';
@@ -49,6 +51,10 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [toast, setToast] = useState(null);
+
+  // Admin Side Panel States
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Data States
   const [loading, setLoading] = useState(true);
@@ -128,7 +134,7 @@ function App() {
         const custId = currentUser.CustomerID || currentUser.UserID;
         api.fetchCustomerBookings(custId)
           .then((data) => setMyBookings(Array.isArray(data) ? data : []))
-          .catch(() => {});
+          .catch(() => { });
       }
 
       setLoading(false);
@@ -274,7 +280,7 @@ function App() {
         result = await api.returnVehicle(formData);
       } else if (type === 'process_payment') {
         result = await api.processPayment(formData);
-        
+
         const baseAmount = Number(data.Amount) - Number(data.TotalFines || 0);
         let receiptPayload = {
           paymentId: data.PaymentID,
@@ -302,7 +308,7 @@ function App() {
               baseAmount: Number(apiReceipt.Amount) - Number(apiReceipt.TotalFines || 0)
             };
           }
-        } catch (_) {}
+        } catch (_) { }
 
         setReceiptData(receiptPayload);
       } else if (type === 'schedule_maintenance') {
@@ -366,45 +372,24 @@ function App() {
     ? maintenance.filter((m) => Number(m.BranchID) === userBranchId || (userBranchName && m.BranchName === userBranchName))
     : maintenance;
 
-  return (
-    <div className="dashboard">
-      {/* Toast Banner */}
-      <Toast toast={toast} />
+  const counts = {
+    myBookingsCount: myBookings.length,
+    allVehiclesCount: displayVehicles.length,
+    bookingsCount: displayBookings.length,
+    rentalsCount: displayRentals.length,
+    outstandingCount: displayOutstanding.length,
+    maintenanceCount: displayMaintenance.length,
+    customersCount: customers.length,
+    auditLogsCount: auditLogs.length,
+    usersCount: users.length
+  };
 
-      {/* Main Header */}
-      <Header 
-        currentUser={currentUser} 
-        onOpenLogin={() => {
-          setIsLoginOpen(true);
-          setIsRegisterMode(false);
-          setAuthPromptMsg('');
-          setLoginError('');
-        }}
-        onLogout={handleLogout}
-        onOpenProfile={() => setActiveTab('profile')}
-      />
-
-      {/* Dynamic Navigation Tabs */}
-      <Navigation 
-        currentUser={currentUser}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        counts={{
-          myBookingsCount: myBookings.length,
-          allVehiclesCount: displayVehicles.length,
-          bookingsCount: displayBookings.length,
-          rentalsCount: displayRentals.length,
-          outstandingCount: displayOutstanding.length,
-          maintenanceCount: displayMaintenance.length,
-          customersCount: customers.length,
-          auditLogsCount: auditLogs.length,
-          usersCount: users.length
-        }}
-      />
+  const renderTabContent = () => (
+    <>
 
       {/* Tab: Browse & Rent Fleet */}
       {activeTab === 'browse' && (
-        <BrowseTab 
+        <BrowseTab
           vehicles={vehicles}
           categories={categories}
           branches={branches}
@@ -431,18 +416,18 @@ function App() {
         <div className="dashboard-container">
           {/* Tab: Executive KPI Dashboard (Admin Only) */}
           {activeTab === 'dashboard' && role === 'Admin' && (
-            <DashboardTab 
-              stats={stats} 
-              allVehicles={allVehicles} 
+            <DashboardTab
+              stats={stats}
+              allVehicles={allVehicles}
               currentUser={currentUser}
-              onNavigate={(tab) => setActiveTab(tab)} 
+              onNavigate={(tab) => setActiveTab(tab)}
               showToast={showToast}
             />
           )}
 
           {/* Tab: User & Staff Administration (Admin Only) */}
           {activeTab === 'users' && role === 'Admin' && (
-            <UsersTab 
+            <UsersTab
               users={users}
               branches={branches}
               onCreateUser={handleCreateUser}
@@ -455,7 +440,7 @@ function App() {
 
           {/* Tab: Fleet Inventory */}
           {activeTab === 'fleet' && (
-            <FleetTab 
+            <FleetTab
               allVehicles={displayVehicles}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -475,7 +460,7 @@ function App() {
 
           {/* Tab: Bookings & My Bookings */}
           {(activeTab === 'bookings' || activeTab === 'my_bookings') && (
-            <BookingsTab 
+            <BookingsTab
               isMyBookings={activeTab === 'my_bookings'}
               bookings={activeTab === 'my_bookings' ? myBookings : displayBookings}
               currentUser={currentUser}
@@ -489,7 +474,7 @@ function App() {
 
           {/* Tab: Active Ongoing Rentals */}
           {activeTab === 'rentals' && (
-            <RentalsTab 
+            <RentalsTab
               activeRentals={displayRentals}
               role={role}
               currentUser={currentUser}
@@ -502,7 +487,7 @@ function App() {
 
           {/* Tab: Payments, Fines & My Invoices */}
           {(activeTab === 'payments' || activeTab === 'my_invoices') && (
-            <PaymentsTab 
+            <PaymentsTab
               isMyInvoices={activeTab === 'my_invoices'}
               outstandingPayments={displayOutstanding}
               allPayments={displayPayments}
@@ -529,7 +514,7 @@ function App() {
 
           {/* Tab: Vehicle Maintenance */}
           {activeTab === 'maintenance' && (
-            <MaintenanceTab 
+            <MaintenanceTab
               maintenance={displayMaintenance}
               role={role}
               currentUser={currentUser}
@@ -555,7 +540,7 @@ function App() {
 
           {/* Tab: Customers Directory */}
           {activeTab === 'customers' && (
-            <CustomersTab 
+            <CustomersTab
               customers={customers}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -564,7 +549,7 @@ function App() {
 
           {/* Tab: Branches & Operational Hubs */}
           {activeTab === 'branches' && (
-            <BranchesTab 
+            <BranchesTab
               branches={branches}
               branchPerformance={branchPerformance}
               role={role}
@@ -579,7 +564,7 @@ function App() {
 
           {/* Tab: User Profile & Account Settings (All User Types) */}
           {activeTab === 'profile' && currentUser && (
-            <ProfileTab 
+            <ProfileTab
               currentUser={currentUser}
               onUpdateCurrentUser={(updated) => {
                 setCurrentUser(updated);
@@ -592,9 +577,77 @@ function App() {
           )}
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div className={role === 'Admin' ? 'admin-app-root' : 'dashboard'}>
+      {/* Toast Banner */}
+      <Toast toast={toast} />
+
+      {/* Production Admin Portal Layout vs Standard Consumer Layout */}
+      {role === 'Admin' ? (
+        <div className={`admin-portal-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+          {/* Production-Level Admin Side Panel */}
+          <AdminSidePanel
+            currentUser={currentUser}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            counts={counts}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            isMobileOpen={isMobileSidebarOpen}
+            onCloseMobile={() => setIsMobileSidebarOpen(false)}
+            onLogout={handleLogout}
+          />
+
+          {/* Main Admin Workspace Viewport */}
+          <div className="admin-main-viewport">
+            <AdminTopBar
+              currentUser={currentUser}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              isCollapsed={isSidebarCollapsed}
+              onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              onToggleMobile={() => setIsMobileSidebarOpen(true)}
+              onLogout={handleLogout}
+              onOpenProfile={() => setActiveTab('profile')}
+            />
+
+            <main className="admin-content-area">
+              {renderTabContent()}
+            </main>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Main Header */}
+          <Header
+            currentUser={currentUser}
+            onOpenLogin={() => {
+              setIsLoginOpen(true);
+              setIsRegisterMode(false);
+              setAuthPromptMsg('');
+              setLoginError('');
+            }}
+            onLogout={handleLogout}
+            onOpenProfile={() => setActiveTab('profile')}
+          />
+
+          {/* Dynamic Navigation Tabs */}
+          <Navigation
+            currentUser={currentUser}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            counts={counts}
+          />
+
+          {renderTabContent()}
+        </>
+      )}
 
       {/* Reusable Action Modals */}
-      <ActionModal 
+      <ActionModal
         modalState={modalState}
         onClose={() => setModalState({ type: null, data: null })}
         formData={formData}
@@ -619,7 +672,7 @@ function App() {
       )}
 
       {/* Auth Modal (Login & Customer Registration) */}
-      <AuthModal 
+      <AuthModal
         isOpen={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}
         isRegisterMode={isRegisterMode}
