@@ -180,7 +180,7 @@ export default function Navigation({
               className={`tab-btn ${activeTab === 'browse' ? 'active' : ''}`} 
               onClick={() => setActiveTab('browse')}
             >
-              <i className="fa-solid fa-car-rear"></i> Browse Fleet
+              <i className="fa-solid fa-car"></i> Browse Fleet
             </button>
             {currentUser && (
               <>
@@ -208,7 +208,7 @@ export default function Navigation({
               className={`tab-btn ${activeTab === 'branches' ? 'active' : ''}`} 
               onClick={() => setActiveTab('branches')}
             >
-              <i className="fa-solid fa-location-dot"></i> Branches & Hubs
+              <i className="fa-solid fa-location-dot nav-pin-icon"></i> Branches & Hubs
             </button>
           </>
         )}
@@ -220,7 +220,7 @@ export default function Navigation({
               className={`tab-btn ${activeTab === 'browse' ? 'active' : ''}`} 
               onClick={() => setActiveTab('browse')}
             >
-              <i className="fa-solid fa-car-rear"></i> Browse Fleet
+              <i className="fa-solid fa-car"></i> Browse Fleet
             </button>
             <button 
               className={`tab-btn ${activeTab === 'fleet' ? 'active' : ''}`} 
