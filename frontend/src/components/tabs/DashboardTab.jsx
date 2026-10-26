@@ -138,7 +138,7 @@ export default function DashboardTab({
             <i className="fa-solid fa-crown" style={{ color: 'var(--yellow)' }}></i> SUPER ADMIN EXECUTIVE INTELLIGENCE
           </div>
           <h1 className="executive-heading">
-            Executive KPI & Performance Command
+            Dashboard
           </h1>
           <p className="executive-subheading">
             Real-time revenue metrics, fleet utilization velocity, multi-branch ledgers & executive reporting.

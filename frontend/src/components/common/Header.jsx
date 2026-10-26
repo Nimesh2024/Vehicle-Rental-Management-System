@@ -124,7 +124,7 @@ export default function Header({
             onClick={onOpenLogin}
           >
             <i className="fa-solid fa-user-lock"></i>
-            <span>Sign In / Register</span>
+            <span>Sign In</span>
           </button>
         )}
       </div>

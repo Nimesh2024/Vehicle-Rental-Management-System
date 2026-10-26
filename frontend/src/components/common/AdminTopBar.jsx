@@ -11,7 +11,7 @@ export default function AdminTopBar({
   onOpenProfile
 }) {
   const tabTitles = {
-    dashboard: { title: 'Executive KPI Dashboard', icon: 'fa-solid fa-chart-pie', category: 'Analytics' },
+    dashboard: { title: 'Dashboard', icon: 'fa-solid fa-chart-pie', category: 'Analytics' },
     audit: { title: 'Security Audit Logs', icon: 'fa-solid fa-shield-halved', category: 'System' },
     browse: { title: 'Fleet Showroom & Catalog', icon: 'fa-solid fa-car-rear', category: 'Storefront' },
     fleet: { title: 'Fleet Inventory Logistics', icon: 'fa-solid fa-warehouse', category: 'Operations' },
@@ -61,8 +61,8 @@ export default function AdminTopBar({
         {/* Breadcrumb Navigation */}
         <div className="admin-top-bar-breadcrumb">
           <span className="breadcrumb-category">
-            <i className="fa-solid fa-shield-halved" style={{ marginRight: '6px', color: 'var(--yellow)' }}></i>
-            {currentTabInfo.category}
+            <i className={`fa-solid ${currentUser?.RoleName === 'Admin' ? 'fa-shield-halved' : 'fa-building-user'}`} style={{ marginRight: '6px', color: 'var(--yellow)' }}></i>
+            {currentUser?.BranchName ? `${currentUser.BranchName} • ${currentTabInfo.category}` : currentTabInfo.category}
           </span>
           <span className="breadcrumb-separator">/</span>
           <span className="breadcrumb-title">
@@ -72,7 +72,7 @@ export default function AdminTopBar({
         </div>
       </div>
 
-      {/* Right: Storefront Switcher, System Tag, Profile Capsule */}
+      {/* Right: Storefront Switcher, Profile Capsule */}
       <div className="admin-top-bar-right">
         {/* Storefront View Switcher Button */}
         {activeTab !== 'browse' ? (
@@ -88,20 +88,15 @@ export default function AdminTopBar({
         ) : (
           <button
             className="btn-storefront-toggle active"
-            onClick={() => setActiveTab('dashboard')}
-            title="Return to Executive KPI Dashboard"
+            onClick={() => setActiveTab(currentUser?.RoleName === 'Admin' ? 'dashboard' : 'fleet')}
+            title={currentUser?.RoleName === 'Admin' ? 'Return to Dashboard' : 'Return to Fleet Inventory'}
             type="button"
           >
-            <i className="fa-solid fa-chart-pie"></i>
-            <span>Back to Dashboard</span>
+            <i className={`fa-solid ${currentUser?.RoleName === 'Admin' ? 'fa-chart-pie' : 'fa-warehouse'}`}></i>
+            <span>{currentUser?.RoleName === 'Admin' ? 'Back to Dashboard' : 'Back to Fleet'}</span>
           </button>
         )}
 
-        {/* System Environment Chip */}
-        <div className="admin-system-chip">
-          <span className="system-chip-dot"></span>
-          <span>ADBMS Production Core</span>
-        </div>
 
         {/* Admin Profile Capsule */}
         <div 
@@ -114,7 +109,9 @@ export default function AdminTopBar({
           </div>
           <div className="admin-top-user-info">
             <span className="admin-top-username">{adminName}</span>
-            <span className="admin-top-badge">Administrator</span>
+            <span className="admin-top-badge">
+              {currentUser?.BranchName ? `${currentUser.RoleName} • ${currentUser.BranchName}` : (currentUser?.RoleName || 'Operations')}
+            </span>
           </div>
           <button
             className="admin-top-logout"

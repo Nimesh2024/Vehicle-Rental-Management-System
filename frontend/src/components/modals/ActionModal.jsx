@@ -945,10 +945,24 @@ export default function ActionModal({
                 <label className="form-label">Damage Assessment Fee (LKR)</label>
                 <input
                   type="number"
+                  min="0"
+                  step="any"
+                  placeholder="0 (Enter damage charges if applicable)"
                   className="form-input"
-                  value={formData.damageCost || 0}
-                  onChange={(e) => setFormData({ ...formData, damageCost: parseFloat(e.target.value) })}
+                  value={formData.damageCost ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setFormData({ ...formData, damageCost: '' });
+                    } else {
+                      const num = parseFloat(val);
+                      setFormData({ ...formData, damageCost: isNaN(num) ? '' : Math.max(0, num) });
+                    }
+                  }}
                 />
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.35rem' }}>
+                  💡 Enter repair or damage charges (positive numbers only). Leave empty or 0 if vehicle returned in perfect condition.
+                </div>
               </div>
             </>
           )}
@@ -1052,10 +1066,16 @@ export default function ActionModal({
                 <label className="form-label">Estimated Service Cost (LKR)</label>
                 <input
                   type="number"
+                  min="0"
+                  step="any"
+                  placeholder="Enter estimated cost e.g. 25000"
                   required
                   className="form-input"
-                  value={formData.cost || 25000}
-                  onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) })}
+                  value={formData.cost === undefined ? '' : formData.cost}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData({ ...formData, cost: val === '' ? '' : parseFloat(val) });
+                  }}
                 />
               </div>
               <div className="form-group">

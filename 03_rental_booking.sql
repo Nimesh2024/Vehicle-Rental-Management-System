@@ -40,6 +40,8 @@ END //
 DELIMITER ;
 
 -- 4. STORED PROCEDURES
+DROP PROCEDURE IF EXISTS ConfirmBooking;
+
 DELIMITER //
 CREATE PROCEDURE ConfirmBooking(
     IN p_CustomerID INT, 
@@ -48,39 +50,103 @@ CREATE PROCEDURE ConfirmBooking(
     IN p_EndDate DATE,
     IN p_DepositAmount DECIMAL(10,2)
 )
-BEGIN
+proc_body: BEGIN
     DECLARE v_VehicleStatus VARCHAR(50);
-    DECLARE v_Conflict INT;
+    DECLARE v_Conflict INT DEFAULT 0;
     DECLARE v_ActualDeposit DECIMAL(10,2);
+    DECLARE v_CustomerStatus VARCHAR(50);
     
+    -- Structured Exception Handler: Guarantees ROLLBACK if any runtime SQL error occurs
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+    -- 1. Date Range Pre-Validation
     IF p_StartDate > p_EndDate OR p_StartDate < CURDATE() THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid rental dates: Start date cannot be in the past, and must be on or before end date.';
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Invalid rental dates: Start date cannot be in the past, and must be on or before end date.';
     END IF;
 
     SET v_ActualDeposit = IFNULL(p_DepositAmount, 25000.00);
 
+    -- 2. Concurrency Safety: Set Isolation Level to REPEATABLE READ for strict snapshot consistency
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
     
-    SELECT Status INTO v_VehicleStatus FROM Vehicles WHERE VehicleID = p_VehicleID;
+    -- 3. Customer Eligibility Check
+    SELECT Status INTO v_CustomerStatus 
+    FROM Customers 
+    WHERE CustomerID = p_CustomerID;
+    
+    IF v_CustomerStatus IS NULL THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer record not found.';
+    ELSEIF v_CustomerStatus != 'Active' THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer account is not active or has been restricted.';
+    END IF;
+
+    -- 4. PESSIMISTIC LOCK: Acquire Exclusive Row Lock (X-Lock) on the target Vehicle.
+    -- Any concurrent transaction attempting to book or alter this vehicle will wait until this transaction completes.
+    SELECT Status INTO v_VehicleStatus 
+    FROM Vehicles 
+    WHERE VehicleID = p_VehicleID 
+    FOR UPDATE;
+    
     IF v_VehicleStatus IS NULL THEN
         ROLLBACK;
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Vehicle record not found.';
     ELSEIF v_VehicleStatus != 'Available' THEN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Selected vehicle is currently unavailable.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Selected vehicle is currently unavailable (under repair or decommissioned).';
     END IF;
 
-    SELECT COUNT(*) INTO v_Conflict FROM Bookings 
-    WHERE VehicleID = p_VehicleID AND Status IN ('Pending', 'Confirmed') 
-    AND (p_StartDate <= EndDate AND p_EndDate >= StartDate);
+    -- 5. RACE-CONDITION PREVENTION: Lock all active/confirmed bookings on this vehicle with FOR UPDATE
+    -- and check for temporal date overlap [p_StartDate, p_EndDate] with existing bookings [StartDate, EndDate]
+    SELECT COUNT(*) INTO v_Conflict 
+    FROM Bookings 
+    WHERE VehicleID = p_VehicleID 
+      AND Status IN ('Pending', 'Confirmed') 
+      AND (p_StartDate <= EndDate AND p_EndDate >= StartDate)
+    FOR UPDATE;
     
     IF v_Conflict > 0 THEN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Dates overlap: This vehicle already has a confirmed booking during these dates.';
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Conflict detected: This vehicle is already reserved for overlapping dates by another customer.';
     END IF;
 
-    INSERT INTO Bookings (CustomerID, VehicleID, StartDate, EndDate, Status, DepositAmount, DepositStatus, DepositPaymentMethod)
-    VALUES (p_CustomerID, p_VehicleID, p_StartDate, p_EndDate, 'Confirmed', v_ActualDeposit, 'Paid', 'Credit Card');
+    -- 6. Insert Confirmed Booking Record atomically
+    INSERT INTO Bookings (
+        CustomerID, 
+        VehicleID, 
+        StartDate, 
+        EndDate, 
+        Status, 
+        DepositAmount, 
+        DepositStatus, 
+        DepositPaymentMethod
+    ) VALUES (
+        p_CustomerID, 
+        p_VehicleID, 
+        p_StartDate, 
+        p_EndDate, 
+        'Confirmed', 
+        v_ActualDeposit, 
+        'Paid', 
+        'Credit Card'
+    );
+    
+    -- 7. Log to Security Audit Trail
+    INSERT INTO AuditLogs (ActionType, TableName, RecordID, Description)
+    VALUES (
+        'INSERT', 
+        'Bookings', 
+        LAST_INSERT_ID(), 
+        CONCAT('Pessimistic-Lock Verified Booking Created: Vehicle #', p_VehicleID, ' for Customer #', p_CustomerID, ' (', p_StartDate, ' to ', p_EndDate, ')')
+    );
     
     COMMIT;
 END //

@@ -44,7 +44,7 @@ export default function AdminSidePanel({
       items: [
         {
           id: 'dashboard',
-          label: 'Executive KPI',
+          label: 'Dashboard',
           desc: 'High-level metrics & revenue',
           icon: 'fa-solid fa-chart-pie'
         },
@@ -145,20 +145,26 @@ export default function AdminSidePanel({
     }
   ], [auditLogsCount, allVehiclesCount, bookingsCount, rentalsCount, maintenanceCount, outstandingCount, usersCount, customersCount]);
 
-  // Filter categories based on search input
+  const role = currentUser?.RoleName;
+  const isBranchStaff = role === 'Branch Manager' || role === 'Rental Staff';
+
+  // Filter categories based on search input & user role
   const filteredCategories = useMemo(() => {
-    if (!searchQuery.trim()) return adminCategories;
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
     return adminCategories
       .map(cat => ({
         ...cat,
-        items: cat.items.filter(item =>
-          item.label.toLowerCase().includes(q) ||
-          item.desc?.toLowerCase().includes(q)
-        )
+        items: cat.items.filter(item => {
+          // If Branch Manager or Staff, hide Admin-only modules
+          if (isBranchStaff && ['dashboard', 'audit', 'users'].includes(item.id)) {
+            return false;
+          }
+          if (!q) return true;
+          return item.label.toLowerCase().includes(q) || item.desc?.toLowerCase().includes(q);
+        })
       }))
       .filter(cat => cat.items.length > 0);
-  }, [adminCategories, searchQuery]);
+  }, [adminCategories, searchQuery, isBranchStaff]);
 
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId);
@@ -188,8 +194,8 @@ export default function AdminSidePanel({
             <>
               <div 
                 className="side-panel-brand" 
-                onClick={() => handleSelectTab('dashboard')} 
-                title="Go to Executive KPI Dashboard"
+                onClick={() => handleSelectTab(role === 'Admin' ? 'dashboard' : 'fleet')} 
+                title={role === 'Admin' ? 'Go to Dashboard' : 'Go to Fleet Inventory'}
                 style={{ cursor: 'pointer' }}
               >
                 <div className="side-panel-brand-icon">
@@ -199,7 +205,11 @@ export default function AdminSidePanel({
                   <div className="side-panel-brand-title">
                     RENTO <span className="side-panel-pro-tag">PRO</span>
                   </div>
-                  <span className="side-panel-brand-tag">Enterprise Admin</span>
+                  <span className="side-panel-brand-tag">
+                    {role === 'Admin' 
+                      ? 'Enterprise Admin' 
+                      : (currentUser?.BranchName ? `${role} • ${currentUser.BranchName}` : (role || 'Branch Portal'))}
+                  </span>
                 </div>
               </div>
 
@@ -361,8 +371,8 @@ export default function AdminSidePanel({
               >
                 <span className="user-name side-panel-user-name">{adminName}</span>
                 <span className="side-panel-role-badge">
-                  <i className="fa-solid fa-shield-halved" style={{ fontSize: '9px', marginRight: '4px' }}></i>
-                  System Administrator
+                  <i className={`fa-solid ${role === 'Admin' ? 'fa-shield-halved' : 'fa-building-user'}`} style={{ fontSize: '9px', marginRight: '4px' }}></i>
+                  {role || 'Operations'}
                 </span>
               </div>
             )}

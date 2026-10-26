@@ -43,7 +43,7 @@ export default function Navigation({
       items: [
         {
           id: 'dashboard',
-          label: 'Executive KPI',
+          label: 'Dashboard',
           desc: 'High-level business metrics, revenue & trends',
           icon: 'fa-solid fa-chart-pie'
         },
@@ -325,10 +325,10 @@ export default function Navigation({
                 <button 
                   className="tab-btn admin-quick-btn"
                   onClick={() => setActiveTab('dashboard')}
-                  title="Switch to Executive KPI Dashboard"
+                  title="Switch to Dashboard"
                   type="button"
                 >
-                  <i className="fa-solid fa-chart-pie"></i> Executive KPI
+                  <i className="fa-solid fa-chart-pie"></i> Dashboard
                 </button>
               )}
               {activeTab !== 'fleet' && (

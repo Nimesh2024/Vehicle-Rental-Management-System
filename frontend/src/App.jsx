@@ -148,16 +148,17 @@ function App() {
     loadAllData();
   }, [loadAllData]);
 
-  // Adjust active tab on login / role change
+  // Adjust active tab only on login / logout / role change (do NOT reset activeTab on every tab click!)
   useEffect(() => {
+    const r = currentUser?.RoleName;
     if (!currentUser) {
       setActiveTab('browse');
-    } else if (currentUser.RoleName === 'Customer') {
-      setActiveTab('browse');
-    } else if (currentUser.RoleName === 'Admin') {
-      setActiveTab('dashboard');
-    } else if (currentUser.RoleName === 'Branch Manager' || currentUser.RoleName === 'Rental Staff') {
-      setActiveTab('fleet');
+    } else if (r === 'Admin') {
+      setActiveTab((prev) => (prev === 'browse' ? 'dashboard' : prev));
+    } else if (r === 'Branch Manager' || r === 'Rental Staff') {
+      setActiveTab((prev) =>
+        ['dashboard', 'users', 'audit'].includes(prev) ? 'fleet' : prev
+      );
     }
   }, [currentUser]);
 
@@ -277,7 +278,10 @@ function App() {
       } else if (type === 'start_rental') {
         result = await api.startRental(formData);
       } else if (type === 'return_vehicle') {
-        result = await api.returnVehicle(formData);
+        result = await api.returnVehicle({
+          ...formData,
+          damageCost: Math.max(0, parseFloat(formData.damageCost) || 0)
+        });
       } else if (type === 'process_payment') {
         result = await api.processPayment(formData);
 
@@ -339,12 +343,14 @@ function App() {
   }
 
   const role = currentUser?.RoleName;
-  const isBranchStaff = (role === 'Branch Manager' || role === 'Rental Staff') && currentUser?.BranchID != null;
+  const isBranchStaff = role === 'Branch Manager' || role === 'Rental Staff';
+  const isPortalUser = role === 'Admin' || isBranchStaff;
   const userBranchId = currentUser?.BranchID != null ? Number(currentUser.BranchID) : null;
   const userBranchName = currentUser?.BranchName || '';
 
+
   // Scoped datasets for Branch Manager & Rental Staff
-  const displayVehicles = isBranchStaff
+  const displayVehicles = isBranchStaff && userBranchId
     ? allVehicles.filter((v) => Number(v.BranchID) === userBranchId || (userBranchName && v.BranchName === userBranchName))
     : allVehicles;
 
@@ -479,7 +485,7 @@ function App() {
               role={role}
               currentUser={currentUser}
               onReturnVehicle={(r) => {
-                setFormData({ rentalId: r.RentalID, endMileage: (r.StartMileage || 0) + 150, damageCost: 0 });
+                setFormData({ rentalId: r.RentalID, endMileage: (r.StartMileage || 0) + 150, damageCost: '' });
                 setModalState({ type: 'return_vehicle', data: r });
               }}
             />
@@ -526,7 +532,7 @@ function App() {
                   vehicleId: defaultVehicleId,
                   branchId: defaultBranch,
                   serviceDate: new Date().toISOString().split('T')[0],
-                  cost: 25000,
+                  cost: '',
                   description: 'Periodic Oil & Brake Service'
                 });
                 setModalState({ type: 'schedule_maintenance', data: null });
@@ -581,12 +587,12 @@ function App() {
   );
 
   return (
-    <div className={role === 'Admin' ? 'admin-app-root' : 'dashboard'}>
+    <div className={isPortalUser ? 'admin-app-root' : 'dashboard'}>
       {/* Toast Banner */}
       <Toast toast={toast} />
 
-      {/* Production Admin Portal Layout vs Standard Consumer Layout */}
-      {role === 'Admin' ? (
+      {/* Production Operations Portal Layout vs Standard Consumer Layout */}
+      {isPortalUser ? (
         <div className={`admin-portal-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
           {/* Production-Level Admin Side Panel */}
           <AdminSidePanel
